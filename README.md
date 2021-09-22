@@ -1,4 +1,8 @@
+<center>
+
 ![](authors/crowd.png)
+
+</center>
 
 ```python
 >>> from authors import Authors
