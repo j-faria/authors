@@ -187,6 +187,9 @@ class Authors:
                 name = query[0][1]
                 institutes = [q[2] for q in query]
 
+                # don't line-break people's names, it's not polite
+                name = name.replace(' ', '~')
+
                 print(f'  {name}', end=' ')
                 numbers = []
                 print(r'\inst{', end='')
