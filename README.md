@@ -19,7 +19,7 @@ pip install authors
 ```
 ```
 \author{
-  J. P. Faria \inst{\ref{ia-porto}, \ref{fcup}} 
+  J. P. Faria \inst{\ref{ia-porto}, \ref{ia-fcup}} 
 }
 \institute{
   Instituto de Astrofísica e Ciências do Espaço Universidade do Porto, CAUP, Rua das Estrelas, 4150-762 Porto, Portugal \label{ia-porto} \and
