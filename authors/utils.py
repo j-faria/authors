@@ -1,8 +1,50 @@
 import re
+from functools import lru_cache
+
+
+def lev_dist(a: str, b: str) -> float:
+    """
+    Calculates the Levenshtein distance between two input strings `a` and `b`
+
+    Args:
+        a, b (str) : The two strings to be compared
+
+    Returns:
+        The distance between string `a` and `b`.
+
+    Examples:
+        >>> lev_dist('stamp', 'stomp')
+        1.0
+    """
+
+    @lru_cache(None)  # for memorization
+    def min_dist(s1, s2):
+        if s1 == len(a) or s2 == len(b):
+            return len(a) - s1 + len(b) - s2
+        # no change required
+        if a[s1] == b[s2]:
+            return min_dist(s1 + 1, s2 + 1)
+        return 1 + min(
+            min_dist(s1, s2 + 1),      # insert character
+            min_dist(s1 + 1, s2),      # delete character
+            min_dist(s1 + 1, s2 + 1),  # replace character
+        )
+    return min_dist(0, 0)
+
+
+def name_to_last(name):
+    if ' ' not in name:
+        return name
+    name = name.replace('{', '').replace('}', '')
+    name = name.replace('  ', ' ')
+    names = name.split(' ')
+    return names[-1]
 
 
 def name_to_initials_last(name):
     if ' ' not in name:
+        return name
+    if '{' in name and '}' in name:
         return name
     name = name.replace('  ', ' ')
     names = name.split(' ')
@@ -48,17 +90,27 @@ def tex_escape(text):
 def tex_deescape(text):
     """ De-escape `text` from TeX characters """
     conv = {
-        r"\'a": 'á',
-        r"\`a": 'à',
-        r"\~a": 'ã',
-        r"\'e": 'é',
-        r"\`e": 'è',
-        r"\'i": 'í',
-        r"\`i": 'ì',
-        r"\'o": 'ó',
-        r"\`o": 'ò',
-        r"\'u": 'ú',
-        r"\'{u}": 'ú',
+        # symbols
+        r"’": "'",
+        #
+        r"\'a": 'á', "\'a": 'á',
+        r"\`a": 'à', "\`a": 'à',
+        r"\~a": 'ã', "\~a": 'ã',
+        #
+        r"\'e": 'é', "\'e": 'é',
+        r"\´e": 'é',
+        r"\’e": 'é',
+        r"\`e": 'è', "\`e": 'è',
+        #
+        r"\'i": 'í', "\'i": 'í',
+        r"\`i": 'ì', "\`i": 'ì',
+        #
+        r"\'o": 'ó', "\'o": 'ó',
+        r"\`o": 'ò', "\`o": 'ò',
+        r"\"o": 'ö', "\"o": 'ö',
+        #
+        r"\'u": 'ú', "\'u": 'ú',
+        r"\'{u}": 'ú', "\'{u}": 'ú',
         r"\`u": 'ù',
         r"\`{u}": 'ù',
         r'\"u': 'ü',
