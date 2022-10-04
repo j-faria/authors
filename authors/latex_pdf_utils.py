@@ -20,3 +20,7 @@ def preview_AandA(text):
     subprocess.call('latexmk -f -pdf aa.tex'.split(), cwd=path)
     pdf = os.path.join(_here_, 'templates', 'aa', 'aa.pdf')
     os.system(f'evince {pdf} &')
+
+
+def preview_MNRAS(text):
+    pass
