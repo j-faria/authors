@@ -3,10 +3,10 @@
 from collections import Counter
 import os
 from typing import List, Literal, Tuple, Union
-from yaml import load, FullLoader, dump
+from yaml import safe_load as load, FullLoader, safe_dump as dump
 
 from .utils import (name_to_initials_last, name_to_last, tex_escape,
-                    tex_deescape)
+                    tex_deescape, humanize_yaml)
 from .latex_pdf_utils import preview_AandA, preview_MNRAS
 
 
@@ -26,9 +26,9 @@ def get_all_known_authors(
     here = os.path.dirname(os.path.abspath(__file__))
     file = os.path.join(here, 'data', 'all_known_authors.yml')
     if return_filename:
-        return load(open(file, encoding='utf-8'), Loader=FullLoader), file
+        return load(open(file, encoding='utf-8')), file
     else:
-        return load(open(file, encoding='utf-8'), Loader=FullLoader)
+        return load(open(file, encoding='utf-8'))
 
 
 def write_all_known_authors(data):
@@ -36,6 +36,7 @@ def write_all_known_authors(data):
     _, filename = get_all_known_authors(return_filename=True)
     with open(filename, 'w', encoding='utf-8') as stream:
         dump(data, stream, allow_unicode=True, width=500, line_break=True)
+    humanize_yaml(filename)
 
 
 def get_all_affiliations():
@@ -75,6 +76,12 @@ def register_author(full_name: str, affiliations: List[str], email: str = None,
         'orcid': orcid,
         'affiliations': []
     }
+
+    if email is None:
+        all_known_authors[full_name].pop('email')
+
+    if orcid is None:
+        all_known_authors[full_name].pop('orcid')
 
     if labels is None:
         labels = len(affiliations) * [None]
@@ -269,8 +276,7 @@ class Authors:
         here = os.path.dirname(os.path.abspath(__file__))
         all_known_authors_file = os.path.join(here, 'data',
                                               'all_known_authors.yml')
-        self.all_known_authors = load(open(all_known_authors_file, encoding='utf-8'),
-                                      Loader=FullLoader)
+        self.all_known_authors = load(open(all_known_authors_file, encoding='utf-8'))
 
         if os.path.exists(load_from):
             A = list(map(str.strip, open(load_from).readlines()))
