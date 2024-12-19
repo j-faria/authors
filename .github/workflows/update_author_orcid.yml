@@ -1,0 +1,51 @@
+name: Update Author ORCID
+
+on:
+    workflow_dispatch:
+      inputs:
+        author:
+          type: string
+          description: 'Full name of the author'
+          required: true
+        orcid:
+          type: string
+          description: 'ORCID of the author'
+          required: true
+
+jobs:
+    update:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-python@v5
+              with:
+                python-version: '3.10'
+                cache: 'pip' # caching pip dependencies
+      
+            - name: Install requirements
+              run: |
+                pip install -U pip
+                pip install pyaml pyperclip
+            
+            - name: Install authors package
+              run: |
+                pip install -e .
+            
+            - name: Update
+              run: |
+                update-author-orcid "${{ github.event.inputs.author }}" "${{ github.event.inputs.orcid }}"
+
+            - name: Upload Known Authors
+              uses: EndBug/add-and-commit@v9
+              with:
+                add: '[ "authors/data/all_known_authors.yml" ]'
+                pull: '--rebase --autostash'
+
+            # - name: Test
+            #   run: |
+            #     cat authors/data/all_known_authors.yml

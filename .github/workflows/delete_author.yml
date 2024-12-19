@@ -1,0 +1,47 @@
+name: Delete Author
+
+on:
+    workflow_dispatch:
+      inputs:
+        author:
+          type: string
+          description: 'Full name of the author'
+          required: true
+
+jobs:
+    update:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-python@v5
+              with:
+                python-version: '3.10'
+                cache: 'pip' # caching pip dependencies
+      
+            - name: Install requirements
+              run: |
+                pip install -U pip
+                pip install pyaml pyperclip
+            
+            - name: Install authors package
+              run: |
+                pip install -e .
+            
+            - name: Update
+              run: |
+                delete-author "${{ github.event.inputs.author }}"
+
+            # - name: Upload Known Authors
+            #   uses: EndBug/add-and-commit@v9
+            #   with:
+            #     add: '[ "authors/data/all_known_authors.yml" ]'
+            #     pull: '--rebase --autostash'
+
+            - name: Test
+              run: |
+                cat authors/data/all_known_authors.yml
