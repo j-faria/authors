@@ -38,7 +38,7 @@ jobs:
             
             - name: Update
               run: |
-                update-author-email ${{ github.event.inputs.author }} ${{ github.event.inputs.email }}
+                update-author-email "${{ github.event.inputs.author }}" "${{ github.event.inputs.email }}"
 
             # - name: Upload Known Authors
             #   uses: EndBug/add-and-commit@v9
