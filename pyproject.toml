@@ -22,6 +22,10 @@ dependencies = [
     "pyperclip",
 ]
 
+[project.scripts]
+update-author-email = "authors.cli:cli_update_author_email"
+
+
 [project.urls]
 Repository = "https://github.com/j-faria/authors"
 
