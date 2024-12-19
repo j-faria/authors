@@ -26,15 +26,15 @@ def get_all_known_authors(
     here = os.path.dirname(os.path.abspath(__file__))
     file = os.path.join(here, 'data', 'all_known_authors.yml')
     if return_filename:
-        return load(open(file), Loader=FullLoader), file
+        return load(open(file, encoding='utf-8'), Loader=FullLoader), file
     else:
-        return load(open(file), Loader=FullLoader)
+        return load(open(file, encoding='utf-8'), Loader=FullLoader)
 
 
 def write_all_known_authors(data):
     # with open('all_known_authors_new.yml', 'w') as stream:
     _, filename = get_all_known_authors(return_filename=True)
-    with open(filename, 'w') as stream:
+    with open(filename, 'w', encoding='utf-8') as stream:
         dump(data, stream, allow_unicode=True, width=500, line_break=True)
 
 
@@ -119,6 +119,19 @@ def update_author_email(name: str, email: str):
     write_all_known_authors(all_known_authors)
 
 
+def update_author_orcid(name: str, orcid: str):
+    """ Update the ORCID of an author
+
+    Args:
+        name (str): The name of the author
+        orcid (str): The new ORCID
+    """
+    all_known_authors = get_all_known_authors()
+    if name in all_known_authors:
+        all_known_authors[name]['orcid'] = str(orcid)
+    write_all_known_authors(all_known_authors)
+
+
 def update_author_affiliations(name: str, affiliations: List[str],
                                strategy: Literal['merge', 'replace'] = 'merge'):
     """ Update the affiliations of an author
@@ -131,12 +144,18 @@ def update_author_affiliations(name: str, affiliations: List[str],
             affiliations are added to the existing ones (keeping only unique).
             If 'replace', the existing affiliations are replaced.
     """
+    if isinstance(affiliations, str):
+        affiliations = [affiliations]
+
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
         if strategy == 'merge':
             existing = all_known_authors[name]['affiliations']
-            new = list(set(affiliations + existing))
+            new = affiliations + existing
             all_known_authors[name]['affiliations'] = new
+        elif strategy == 'replace':
+            all_known_authors[name]['affiliations'] = affiliations
+
     write_all_known_authors(all_known_authors)
 
 
@@ -241,10 +260,16 @@ class Authors:
             Authors('First Name\nSecond Name')
             Authors('author_list.txt')
         """
+        if not isinstance(load_from, str):
+            raise TypeError('`load_from` must be a string')
+        
+        if load_from == '':
+            raise ValueError('`load_from` should not be an empty string')
+
         here = os.path.dirname(os.path.abspath(__file__))
         all_known_authors_file = os.path.join(here, 'data',
                                               'all_known_authors.yml')
-        self.all_known_authors = load(open(all_known_authors_file),
+        self.all_known_authors = load(open(all_known_authors_file, encoding='utf-8'),
                                       Loader=FullLoader)
 
         if os.path.exists(load_from):
@@ -521,7 +546,7 @@ class Authors:
 
                     numbers.append(institutes_in_list.index(institute) + 1)
 
-                    end = ',\, ' if j < (len(institutes) - 1) else ''
+                    end = r',\, ' if j < (len(institutes) - 1) else ''
                     text += f'{numbers[-1]}{end}'
 
                 # thanks = queryA[0][3]
@@ -529,7 +554,7 @@ class Authors:
                 #     text += rf', \thanks{{ {thanks} }}'
 
                 if 'orcid' in data and add_orcids:
-                    text += f", \, \\orcidlink{{{data['orcid']}}} "
+                    text += rf", \, \\orcidlink{{{data['orcid']}}} "
 
                 text += r'}$,  '
 
