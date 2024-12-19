@@ -1,8 +1,26 @@
 <div align="center">
-
+  
 ![](authors/crowd.png)
 
+
+
+| [![badge][uan]][uan-link] | [![badge][uae]][uae-link] | [![badge][uao]][uao-link] | [![badge][da]][da-link]  |
+|---------------------------------------|---|---|---|
+
 </div>
+
+[uan]: https://img.shields.io/badge/Update-Author%20Name-orange?style=for-the-badge
+[uan-link]: https://github.com/j-faria/authors/actions/workflows/update_author_name.yml
+
+[uae]: https://img.shields.io/badge/Update-Author%20Email-orange?style=for-the-badge
+[uae-link]: https://github.com/j-faria/authors/actions/workflows/update_author_email.yml
+
+[uao]: https://img.shields.io/badge/Update-Author%20ORCID-orange?style=for-the-badge
+[uao-link]: https://github.com/j-faria/authors/actions/workflows/update_author_orcid.yml
+
+[da]: https://img.shields.io/badge/Delete-Author-orange?style=for-the-badge
+[da-link]: https://github.com/j-faria/authors/actions/workflows/delete_author.yml
+
 
 ### Installation
 
