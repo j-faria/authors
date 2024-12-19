@@ -2,7 +2,7 @@
   
 ![](authors/crowd.png)
 
-
+ ## the [list](https://github.com/j-faria/authors/blob/main/authors/data/all_known_authors.yml) of known authors is **public!**
 
 | [![badge][uan]][uan-link] | [![badge][uae]][uae-link] | [![badge][uao]][uao-link] | [![badge][da]][da-link]  |
 |---------------------------------------|---|---|---|
@@ -45,6 +45,4 @@ pip install authors
 }
 ```
 
-### Add yourself
 
-Feel free to open [an issue](https://github.com/j-faria/authors/issues) or a [pull request](https://github.com/j-faria/authors/pulls) to add yourself to the (**public!**) [list](https://github.com/j-faria/authors/blob/main/authors/data/all_known_authors.yml) of known authors.
