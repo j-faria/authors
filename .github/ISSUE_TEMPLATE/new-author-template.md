@@ -7,8 +7,10 @@ assignees: j-faria
 
 ---
 
-Name: 
-Affiliations:
- - 
-Email (optional): 
-orcid (optional):
+- Name: 
+- Affiliations
+   - first
+   - second
+ 
+- email (optional): 
+- orcid (optional):
