@@ -44,12 +44,30 @@ def name_to_last(name):
 def name_to_initials_last(name):
     if ' ' not in name:
         return name
+
+    last_name = None
+
+    # can use "{last name}" to specify part of name which should not be changed
     if '{' in name and '}' in name:
-        return name
+        match = re.findall(r'\{(\w.+)\}', name)
+        if len(match) == 1:
+            last_name = match[0]
+            name = name.replace('{' + match[0] + '}', '')
+
+    # can also use "[last name]" to specify part of name which should not be changed
+    if '[' in name and ']' in name:
+        match = re.findall(r'\[(\w.+)\]', name)
+        if len(match) == 1:
+            last_name = match[0]
+            name = name.replace('[' + match[0] + ']', '')
+
     name = name.replace('  ', ' ')
     names = name.split(' ')
     name = [n[0] + '.' for n in names[:-1]]
-    name.append(names[-1])
+    if last_name is None:
+        name.append(names[-1])
+    else:
+        name.append(last_name)
     return ' '.join(name)
 
 
@@ -94,19 +112,19 @@ def tex_deescape(text):
         r"’": "'",
         #
         r"\'a": 'á', "\'a": 'á',
-        r"\`a": 'à', "\`a": 'à',
-        r"\~a": 'ã', "\~a": 'ã',
+        r"\`a": 'à', #r"\`a": 'à',
+        r"\~a": 'ã', #r"\~a": 'ã',
         #
         r"\'e": 'é', "\'e": 'é',
         r"\´e": 'é',
         r"\’e": 'é',
-        r"\`e": 'è', "\`e": 'è',
+        r"\`e": 'è', #r"\`e": 'è',
         #
         r"\'i": 'í', "\'i": 'í',
-        r"\`i": 'ì', "\`i": 'ì',
+        r"\`i": 'ì', #r"\`i": 'ì',
         #
         r"\'o": 'ó', "\'o": 'ó',
-        r"\`o": 'ò', "\`o": 'ò',
+        r"\`o": 'ò', #r"\`o": 'ò',
         r"\"o": 'ö', "\"o": 'ö',
         #
         r"\'u": 'ú', "\'u": 'ú',
