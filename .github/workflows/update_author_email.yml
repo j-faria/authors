@@ -1,0 +1,23 @@
+name: Update Author Email
+
+on:
+    workflow_dispatch:
+      inputs:
+        author:
+          type: string
+          description: 'Full name of the author'
+          required: true
+        email:
+          type: string
+          description: 'Email address of the author'
+          required: true
+
+jobs:
+    update:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+
+        steps:
+            - uses: actions/checkout@v4
