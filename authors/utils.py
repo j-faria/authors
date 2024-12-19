@@ -135,3 +135,11 @@ def substr_in_list(sub, lst):
         if sub in item:
             return True, i
     return False, None
+
+
+def humanize_yaml(file):
+    import fileinput
+    for line in fileinput.FileInput(file, inplace=True, encoding='utf-8'):
+        if not line.startswith(' '):
+            print()
+        print(line, end='')
