@@ -175,9 +175,10 @@ def delete_author(name: str):
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
         all_known_authors.pop(name)
-        print('removed author "{name}"')
+        write_all_known_authors(all_known_authors)
+        print(f'removed author "{name}"')
     else:
-        print('author "{name}" not found')
+        print(f'author "{name}" not found')
 
 
 def change_affiliation(old: str, new: str):
