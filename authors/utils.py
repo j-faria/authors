@@ -31,11 +31,32 @@ def lev_dist(a: str, b: str) -> float:
         )
     return min_dist(0, 0)
 
+def find_bracket_last_name(name):
+    # can use "{last name}" to specify part of name which should not be changed
+    if '{' in name and '}' in name:
+        match = re.findall(r'\{(\w.+)\}', name)
+        if len(match) == 1:
+            last_name = match[0]
+            name = name.replace('{' + match[0] + '}', '')
+        return name, last_name
+
+    # can also use "[last name]" to specify part of name which should not be changed
+    if '[' in name and ']' in name:
+        match = re.findall(r'\[(\w.+)\]', name)
+        if len(match) == 1:
+            last_name = match[0]
+            name = name.replace('[' + match[0] + ']', '')
+        return name, last_name
+
+    return name, None
+
 
 def name_to_last(name):
     if ' ' not in name:
         return name
-    name = name.replace('{', '').replace('}', '')
+    name, last_name = find_bracket_last_name(name)
+    if last_name is not None:
+        return last_name
     name = name.replace('  ', ' ')
     names = name.split(' ')
     return names[-1]
@@ -45,21 +66,7 @@ def name_to_initials_last(name):
     if ' ' not in name:
         return name
 
-    last_name = None
-
-    # can use "{last name}" to specify part of name which should not be changed
-    if '{' in name and '}' in name:
-        match = re.findall(r'\{(\w.+)\}', name)
-        if len(match) == 1:
-            last_name = match[0]
-            name = name.replace('{' + match[0] + '}', '')
-
-    # can also use "[last name]" to specify part of name which should not be changed
-    if '[' in name and ']' in name:
-        match = re.findall(r'\[(\w.+)\]', name)
-        if len(match) == 1:
-            last_name = match[0]
-            name = name.replace('[' + match[0] + ']', '')
+    name, last_name = find_bracket_last_name(name)
 
     name = name.replace('  ', ' ')
     names = name.split(' ')
