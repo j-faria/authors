@@ -19,11 +19,11 @@ pip install authors
 ```
 ```
 \author{
-  J. P. Faria \inst{\ref{ia-porto}, \ref{ia-fcup}} 
+  J.~P.~Faria \inst{\ref{geneva}, \orcidlink{0000-0002-6728-244X} }
 }
+
 \institute{
-  Instituto de Astrofísica e Ciências do Espaço Universidade do Porto, CAUP, Rua das Estrelas, 4150-762 Porto, Portugal \label{ia-porto} \and
-  Departamento de Física e Astronomia, Faculdade de Ciências, Universidade do Porto, Rua Campo Alegre, 4169-007 Porto, Portugal \label{ia-fcup}
+  Observatoire Astronomique de l'Université de Genève, Chemin Pegasi 51b, 1290 Versoix, Switzerland \label{geneva}
 }
 ```
 
