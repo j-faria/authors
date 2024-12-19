@@ -3,7 +3,7 @@
 from collections import Counter
 import os
 from typing import List, Literal, Tuple, Union
-from yaml import safe_load as load, FullLoader, safe_dump as dump
+from yaml import safe_load as load, safe_dump as dump
 
 from .utils import (name_to_initials_last, name_to_last, tex_escape,
                     tex_deescape, humanize_yaml)
@@ -356,7 +356,7 @@ class Authors:
 
         Args:
             alphabetical (bool, optional):
-                Whether to sort author names alphabetically. Default is False
+                Whether to sort author (last) names alphabetically.
             alphabetical_after (int, optional):
                 Sort author names alphabetically *after* this author. By
                 default, sort after the first author.
@@ -374,9 +374,9 @@ class Authors:
             add_orcids (bool, optional):
                 Whether to add ORCID links for authors that have them. Note that
                 this may require additional LaTeX, and may not be accepted by
-                every journal. Default is True.
+                every journal.
             preview (bool, optional):
-                NO DOC
+                Try to compile and preview a template LaTeX file.
             save_to_file (str, optional):
                 File where to save the LaTeX tags
         """
@@ -432,10 +432,11 @@ class Authors:
                 # if thanks is not None:
                 #     text += rf', \thanks{{ {thanks} }}'
 
-                if 'orcid' in data and add_orcids:
-                    text += f", \\orcidlink{{{data['orcid']}}} "
-
                 text += r'} '
+
+                if 'orcid' in data and add_orcids:
+                    text += f"\\orcidlink{{{data['orcid']}}} "
+
 
             else:
                 text += f'  {author} '
