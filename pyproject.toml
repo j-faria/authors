@@ -23,7 +23,10 @@ dependencies = [
 ]
 
 [project.scripts]
+update-author-name = "authors.cli:cli_update_author_name"
 update-author-email = "authors.cli:cli_update_author_email"
+update-author-orcid = "authors.cli:cli_update_author_orcid"
+delete-author = "authors.cli:cli_delete_author"
 
 
 [project.urls]
