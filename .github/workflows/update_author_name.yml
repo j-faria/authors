@@ -40,12 +40,12 @@ jobs:
               run: |
                 update-author-name "${{ github.event.inputs.old_name }}" "${{ github.event.inputs.new_name }}"
 
-            # - name: Upload Known Authors
-            #   uses: EndBug/add-and-commit@v9
-            #   with:
-            #     add: '[ "authors/data/all_known_authors.yml" ]'
-            #     pull: '--rebase --autostash'
+            - name: Upload Known Authors
+              uses: EndBug/add-and-commit@v9
+              with:
+                add: '[ "authors/data/all_known_authors.yml" ]'
+                pull: '--rebase --autostash'
 
-            - name: Test
-              run: |
-                cat authors/data/all_known_authors.yml
+            # - name: Test
+            #   run: |
+            #     cat authors/data/all_known_authors.yml
