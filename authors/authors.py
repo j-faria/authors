@@ -274,6 +274,9 @@ class Authors:
         if load_from == '':
             raise ValueError('`load_from` should not be an empty string')
 
+        if load_from == 'all':
+            load_from = '\n'.join([n for n in get_all_known_authors().keys()])
+
         here = os.path.dirname(os.path.abspath(__file__))
         all_known_authors_file = os.path.join(here, 'data',
                                               'all_known_authors.yml')
