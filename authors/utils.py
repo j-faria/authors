@@ -32,6 +32,7 @@ def lev_dist(a: str, b: str) -> float:
     return min_dist(0, 0)
 
 def find_bracket_last_name(name):
+    last_name = None
     # can use "{last name}" to specify part of name which should not be changed
     if '{' in name and '}' in name:
         match = re.findall(r'\{(\w.+)\}', name)
@@ -48,7 +49,7 @@ def find_bracket_last_name(name):
             name = name.replace('[' + match[0] + ']', '')
         return name, last_name
 
-    return name, None
+    return name, last_name
 
 
 def name_to_last(name):
@@ -70,7 +71,13 @@ def name_to_initials_last(name):
 
     name = name.replace('  ', ' ')
     names = name.split(' ')
-    name = [n[0] + '.' for n in names[:-1]]
+    initials = []
+    for n in names[:-1]:
+        if '-' in n:
+            initials.append('-'.join([f'{p[0]}.' for p in n.split('-')]))
+        else:
+            initials.append(n[0] + '.')
+    name = initials
     if last_name is None:
         name.append(names[-1])
     else:
@@ -105,7 +112,7 @@ def tex_escape(text):
         '}': r'\}',
         '~': r'\textasciitilde{}',
         '^': r'\^{}',
-        '\\': r'\textbackslash{}',
+        # '\\': r'\textbackslash{}',
         '<': r'\textless{}',
         '>': r'\textgreater{}',
     }
