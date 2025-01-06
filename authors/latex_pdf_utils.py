@@ -3,11 +3,7 @@ import subprocess
 
 _here_ = os.path.abspath(os.path.dirname(__file__))
 
-
-def preview_AandA(text):
-    template = os.path.join(_here_, 'templates', 'aa', 'aa-template.tex')
-    output = os.path.join(_here_, 'templates', 'aa', 'aa.tex')
-    assert os.path.exists(template)
+def fill_in_template(text, template, output):
     with open(template, 'r', encoding='utf-8') as fin:
         with open(output, 'w', encoding='utf-8') as fout:
             for line in fin.readlines():
@@ -16,11 +12,39 @@ def preview_AandA(text):
                 else:
                     print(line, end='', file=fout)
 
-    path = os.path.join(_here_, 'templates', 'aa')
-    subprocess.call('latexmk -f -pdf aa.tex'.split(), cwd=path)
-    pdf = os.path.join(_here_, 'templates', 'aa', 'aa.pdf')
+def compile_latex(wd, texname, pdfname):
+    print('compiling LaTeX...')
+    out = subprocess.check_output(f'latexmk -f -pdf {texname}'.split(), cwd=wd)
+    pdf = os.path.join(wd, pdfname)
     os.startfile(pdf)
 
 
+def preview_AandA(text, longauth=False):
+    template = os.path.join(_here_, 'templates', 'aa', 'aa-template.tex')
+    output = os.path.join(_here_, 'templates', 'aa', 'aa.tex')
+    assert os.path.exists(template)
+    fill_in_template(text, template, output)
+
+    # longauth option to aa class
+    with open(output, 'r', encoding='utf-8') as fin:
+        text = fin.read()
+        if longauth:
+            text = text.replace('[??longauth??]', '[longauth]')
+        else:
+            text = text.replace('[??longauth??]', '')
+    with open(output, 'w', encoding='utf-8') as fout:
+        fout.write(text)
+    ##
+
+    path = os.path.join(_here_, 'templates', 'aa')
+    compile_latex(path, 'aa.tex', 'aa.pdf')
+
+
 def preview_MNRAS(text):
-    pass
+    template = os.path.join(_here_, 'templates', 'mnras', 'mnras-template.tex')
+    output = os.path.join(_here_, 'templates', 'mnras', 'mnras.tex')
+    assert os.path.exists(template)
+    fill_in_template(text, template, output)
+    path = os.path.join(_here_, 'templates', 'mnras')
+    compile_latex(path, 'mnras.tex', 'mnras.pdf')
+
