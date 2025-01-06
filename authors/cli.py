@@ -1,6 +1,21 @@
 from argparse import ArgumentParser
+from .authors import Authors
 from .authors import delete_author, update_author_email, update_author_name, update_author_orcid
 
+
+def cli_authors():
+    parser = ArgumentParser()
+    parser.add_argument('file', type=str)
+    parser.add_argument('-j', '--jornal', type=str, 
+                        default='aanda', choices=['aanda', 'mnras'])
+    parser.add_argument('-p', '--preview', action='store_true')
+    args = parser.parse_args()
+    
+    a = Authors(args.file)
+    if args.jornal == 'aanda':
+        a.AandA(preview=args.preview)
+    elif args.jornal == 'mnras':
+        a.MNRAS(preview=args.preview)
 
 def cli_update_author_name():
     doc = update_author_name.__doc__.split('\n')[0]
