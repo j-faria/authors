@@ -6,7 +6,7 @@ from typing import List, Literal, Tuple, Union
 from yaml import safe_load as load, safe_dump as dump
 
 from .utils import (name_to_initials_last, name_to_last, tex_escape,
-                    tex_deescape, humanize_yaml)
+                    tex_deescape, humanize_yaml, closest_author)
 from .latex_pdf_utils import preview_AandA, preview_MNRAS
 
 
@@ -51,18 +51,39 @@ def get_all_affiliations():
     return affiliations
 
 
-def register_author(full_name: str, affiliations: List[str], email: str = None,
-                    orcid: str = None, labels: List[str] = None):
+def get_all_affiliations_with_label():
+    all_known_authors = get_all_known_authors()
+    aff_label = {}
+    for a in all_known_authors.values():
+        for aff in a['affiliations']:
+            if isinstance(aff, dict):
+                key = list(aff.keys())[0]
+                aff_label[key] = aff[key]['label']
+    return aff_label
+
+
+
+def register_author(full_name: str, affiliations: List[str], labels: List[str] = None, 
+                    email: str = None, orcid: str = None, acknowledgements: str = None,
+                    nickname: str = None):
     """Register a new author
 
     Args:
-        full_name (str): Full name of the author
-        affiliations (List[str]): List of affiliations
-        email (str, optional): Email address. Defaults to None.
-        orcid (str, optional): ORCID id. Defaults to None.
+        full_name (str):
+            Full name of the author
+        affiliations (List[str]):
+            List of affiliations
         labels (List[str], optional):
             Labels to use for each affiliation. Should have the same length as
             `affiliations`. Defaults to None.
+        email (str, optional):
+            Email address. Defaults to None.
+        orcid (str, optional):
+            ORCID id. Defaults to None.
+        acknowledgements (str, optional):
+            Author's acknowledgements. Defaults to None.
+        nickname (str, optional):
+            Nickname of the author. Defaults to None.
     """
     full_name = tex_deescape(str(full_name))
     all_known_authors, filename = get_all_known_authors(return_filename=True)
@@ -93,6 +114,12 @@ def register_author(full_name: str, affiliations: List[str], email: str = None,
         else:
             aff_label = {aff: {'label': label}}
             all_known_authors[full_name]['affiliations'].append(aff_label)
+
+    if acknowledgements is not None:
+        all_known_authors[full_name]['acknowledgements'] = acknowledgements
+
+    if nickname is not None:
+        all_known_authors[full_name]['nickname'] = nickname
 
     write_all_known_authors(all_known_authors)
 
@@ -136,7 +163,11 @@ def update_author_orcid(name: str, orcid: str):
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
         all_known_authors[name]['orcid'] = str(orcid)
-    write_all_known_authors(all_known_authors)
+        write_all_known_authors(all_known_authors)
+        print('updated ORCID for', name)
+    else:
+        # closest = closest_author(name, list(all_known_authors.keys()))[0]
+        print(f'author "{name}" not found')
 
 
 def update_author_affiliations(name: str, affiliations: List[str],
@@ -166,6 +197,32 @@ def update_author_affiliations(name: str, affiliations: List[str],
     write_all_known_authors(all_known_authors)
 
 
+def update_author_acknowledgements(name: str, acknowledgements: str):
+    """ Update the acknowledgements of an author
+
+    Args:
+        name (str): The name of the author
+        acknowledgements (str): The new acknowledgements
+    """
+    all_known_authors = get_all_known_authors()
+    if name in all_known_authors:
+        all_known_authors[name]['acknowledgements'] = str(acknowledgements)
+    write_all_known_authors(all_known_authors)
+
+
+def update_author_nickname(name: str, nickname: str):
+    """ Update the nickname of an author
+
+    Args:
+        name (str): The name of the author
+        nickname (str): The new nickname
+    """
+    all_known_authors = get_all_known_authors()
+    if name in all_known_authors:
+        all_known_authors[name]['nickname'] = str(nickname)
+    write_all_known_authors(all_known_authors)
+
+
 def delete_author(name: str):
     """ Remove an author from the known author list
 
@@ -188,11 +245,18 @@ def change_affiliation(old: str, new: str):
         old (str): old name of the affiliation, which will be replaced
         new (str): new name of the affiliation
     """
-    from fileinput import FileInput
-    _, filename = get_all_known_authors(return_filename=True)
-    with FileInput(filename, inplace=True, backup='.bak') as f:
-        for line in f:
-            print(line.replace(old, new), end='')
+    all_known_authors = get_all_known_authors()
+    for k, v in all_known_authors.items():
+        affs = v['affiliations']
+        for i, aff in enumerate(affs):
+            if old in aff:
+                print(k, aff, type(aff))
+                if isinstance(aff, str):
+                    v['affiliations'][i] = new
+                elif isinstance(aff, dict):
+                    v['affiliations'][i][new] = aff[old]
+                    v['affiliations'][i].pop(old)
+    write_all_known_authors(all_known_authors)
 
 
 def set_affiliation_label(affiliation: str, label: str):
@@ -216,7 +280,7 @@ def set_affiliation_label(affiliation: str, label: str):
     write_all_known_authors(all_known_authors)
 
 
-def _health_check():
+def _health_check(check_affiliations: bool = True):
     all_known_authors = get_all_known_authors()
     print(f'there are {len(all_known_authors)} known authors')
     print('checking for duplicate / similar author names...')
@@ -234,11 +298,23 @@ def _health_check():
             if counts > 1:
                 print('  ', name, 'occurs', counts, 'times')
 
+    if not check_affiliations:
+        return
+
     affiliations = list(set(get_all_affiliations()))
+    affiliation_label = get_all_affiliations_with_label()
     print(f'there are {len(affiliations)} unique affiliations')
 
+    print('setting affiliation labels...')
+    for i, affiliation in enumerate(affiliations):
+        print(f'progress {i + 1}/{len(affiliations)}', end='\r')
+        if affiliation in affiliation_label:
+            set_affiliation_label(affiliation, affiliation_label[affiliation])
+
+    print('checking for duplicate / similar affiliations...')
     from .utils import lev_dist
     for i, affiliation1 in enumerate(affiliations):
+        print(f'progress {i + 1}/{len(affiliations)}', end='\r')
         for j, affiliation2 in enumerate(affiliations[i + 1:]):
             dist = lev_dist(affiliation1, affiliation2)
             prob = 1 - 2 * dist / (len(affiliation1) + len(affiliation2))
@@ -283,7 +359,7 @@ class Authors:
         self.all_known_authors = load(open(all_known_authors_file, encoding='utf-8'))
 
         if os.path.exists(load_from):
-            A = list(map(str.strip, open(load_from).readlines()))
+            A = list(map(str.strip, open(load_from, encoding='utf-8').readlines()))
         else:
             assert isinstance(load_from, str)
             A = load_from.splitlines()
@@ -300,6 +376,8 @@ class Authors:
         known = []
         for last_name in self.last_names:
             if last_name.lower() in known_last_names:
+                known.append(True)
+            elif tex_deescape(last_name).lower() in known_last_names:
                 known.append(True)
             else:
                 known.append(False)
@@ -349,7 +427,10 @@ class Authors:
     def query_author(self, author: str):
         last_name = name_to_last(author)
         for name, data in self.all_known_authors.items():
-            if last_name in name_to_last(name):
+            _last = name_to_last(name)
+            if last_name == _last:
+                return name, data
+            if tex_deescape(last_name) == _last:
                 return name, data
 
     def AandA(self, alphabetical: bool = False, alphabetical_after: int = 1,
@@ -478,7 +559,8 @@ class Authors:
                 print(text, file=f)
 
         if preview:
-            preview_AandA(text)
+            longauth = len(institutes_in_list) > 20
+            preview_AandA(text, longauth=longauth)
 
 
     def MNRAS(self, line_breaks: int = 6, alphabetical: bool = False,
@@ -505,10 +587,6 @@ class Authors:
                       (this would be equivalent to using alphabetical_after=3)
             force_initials (bool, optional):
                 If True, force the author names to be F. M. Last
-            add_orcids (bool, optional):
-                Whether to add ORCID links for authors that have them. Note that
-                this may require additional LaTeX, and may not be accepted by
-                every journal. Default is True.
             preview (bool, optional):
                 NO DOC
             save_to_file (str, optional):
@@ -564,10 +642,13 @@ class Authors:
                 # if thanks is not None:
                 #     text += rf', \thanks{{ {thanks} }}'
 
-                if 'orcid' in data and add_orcids:
-                    text += rf", \, \\orcidlink{{{data['orcid']}}} "
+                # if 'orcid' in data and add_orcids:
+                #     text += rf", \, \\orcidlink{{{data['orcid']}}} "
 
-                text += r'}$,  '
+                text += r'}$'
+
+                if i < (len(self.all_authors) - 1):
+                    text += ', '
 
             # else:
             #     text += f'  {author} '
