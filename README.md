@@ -45,7 +45,7 @@ pip install authors
 ```
 ```
 \author{
-  J.~P.~Faria \inst{\ref{geneva}, \orcidlink{0000-0002-6728-244X} }
+  J.~P.~Faria \inst{\ref{geneva}} \orcidlink{0000-0002-6728-244X}
 }
 
 \institute{
