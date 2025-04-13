@@ -15,7 +15,7 @@ def get_all_known_authors(return_filename=False) -> Union[dict, Tuple[dict, str]
     Load the dictionary of all known authors
 
     Args:
-        return_filename (bool): 
+        return_filename (bool):
             Whether to return the path to the yaml file
     Returns:
         known_authors (dict):
@@ -32,7 +32,7 @@ def get_all_known_authors(return_filename=False) -> Union[dict, Tuple[dict, str]
 
 
 def write_all_known_authors(data: dict):
-    """ Write all the known authors to the yaml file
+    """Write all the known authors to the yaml file
 
     Args:
         data (dict):
@@ -45,7 +45,7 @@ def write_all_known_authors(data: dict):
 
 
 def get_all_affiliations():
-    """ Get a list of all known affiliations """
+    """Get a list of all known affiliations"""
     all_known_authors = get_all_known_authors()
     affiliations = []
     for a in all_known_authors.values():
@@ -58,7 +58,7 @@ def get_all_affiliations():
 
 
 def get_all_affiliations_with_label():
-    """ Get a dictionary of all known affiliations and corresponding labels """
+    """Get a dictionary of all known affiliations and corresponding labels"""
     all_known_authors = get_all_known_authors()
     aff_label = {}
     for a in all_known_authors.values():
@@ -69,10 +69,15 @@ def get_all_affiliations_with_label():
     return aff_label
 
 
-
-def register_author(full_name: str, affiliations: List[str], labels: List[str] = None, 
-                    email: str = None, orcid: str = None, acknowledgements: str = None,
-                    nickname: str = None):
+def register_author(
+    full_name: str,
+    affiliations: List[str],
+    labels: List[str] = None,
+    email: str = None,
+    orcid: str = None,
+    acknowledgements: str = None,
+    nickname: str = None,
+):
     """Register a new author
 
     Args:
@@ -93,23 +98,19 @@ def register_author(full_name: str, affiliations: List[str], labels: List[str] =
             Nickname of the author. Defaults to None.
     """
     full_name = tex_deescape(str(full_name))
-    all_known_authors, filename = get_all_known_authors(return_filename=True)
+    all_known_authors, _ = get_all_known_authors(return_filename=True)
 
     if full_name in all_known_authors:
         print(f'author "{full_name}" is already known')
         return
 
-    all_known_authors[full_name] = {
-        'email': email,
-        'orcid': orcid,
-        'affiliations': []
-    }
+    all_known_authors[full_name] = {"email": email, "orcid": orcid, "affiliations": []}
 
     if email is None:
-        all_known_authors[full_name].pop('email')
+        all_known_authors[full_name].pop("email")
 
     if orcid is None:
-        all_known_authors[full_name].pop('orcid')
+        all_known_authors[full_name].pop("orcid")
 
     if labels is None:
         labels = len(affiliations) * [None]
@@ -117,16 +118,16 @@ def register_author(full_name: str, affiliations: List[str], labels: List[str] =
     for aff, label in zip(affiliations, labels):
         aff = tex_deescape(str(aff))
         if label is None:
-            all_known_authors[full_name]['affiliations'].append(aff)
+            all_known_authors[full_name]["affiliations"].append(aff)
         else:
-            aff_label = {aff: {'label': label}}
-            all_known_authors[full_name]['affiliations'].append(aff_label)
+            aff_label = {aff: {"label": label}}
+            all_known_authors[full_name]["affiliations"].append(aff_label)
 
     if acknowledgements is not None:
-        all_known_authors[full_name]['acknowledgements'] = acknowledgements
+        all_known_authors[full_name]["acknowledgements"] = acknowledgements
 
     if nickname is not None:
-        all_known_authors[full_name]['nickname'] = nickname
+        all_known_authors[full_name]["nickname"] = nickname
 
     write_all_known_authors(all_known_authors)
 
