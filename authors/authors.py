@@ -58,13 +58,14 @@ def get_all_affiliations():
 
 
 def get_all_affiliations_with_label():
+    """ Get a dictionary of all known affiliations and corresponding labels """
     all_known_authors = get_all_known_authors()
     aff_label = {}
     for a in all_known_authors.values():
-        for aff in a['affiliations']:
+        for aff in a["affiliations"]:
             if isinstance(aff, dict):
                 key = list(aff.keys())[0]
-                aff_label[key] = aff[key]['label']
+                aff_label[key] = aff[key]["label"]
     return aff_label
 
 
