@@ -31,19 +31,25 @@ def get_all_known_authors(return_filename=False) -> Union[dict, Tuple[dict, str]
         return load(open(file, encoding="utf-8"))
 
 
-def write_all_known_authors(data):
-    # with open('all_known_authors_new.yml', 'w') as stream:
+def write_all_known_authors(data: dict):
+    """ Write all the known authors to the yaml file
+
+    Args:
+        data (dict):
+            Dictionary with information about the known authors
+    """
     _, filename = get_all_known_authors(return_filename=True)
-    with open(filename, 'w', encoding='utf-8') as stream:
+    with open(filename, "w", encoding="utf-8") as stream:
         dump(data, stream, allow_unicode=True, width=500, line_break=True)
     humanize_yaml(filename)
 
 
 def get_all_affiliations():
+    """ Get a list of all known affiliations """
     all_known_authors = get_all_known_authors()
     affiliations = []
     for a in all_known_authors.values():
-        for aff in a['affiliations']:
+        for aff in a["affiliations"]:
             if isinstance(aff, dict):
                 affiliations.append(list(aff.keys())[0])
             else:
