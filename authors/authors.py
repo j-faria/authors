@@ -132,20 +132,29 @@ def register_author(
     write_all_known_authors(all_known_authors)
 
 
-def update_author_name(old_name: str, new_name: str):
-    """ Update the name of one author
+def update_author_name(old_name: str, new_name: str, allow_closest: bool = False):
+    """Update the name of one author
 
     Args:
         old_name (str):
             The old name, which should exist in the list of known authors
         new_name (str):
             The new name of the author
+        allow_closest (bool, optional):
+            If True and `old_name` is not found, try to find the closest match
+            in the list of known authors
     """
     all_known_authors = get_all_known_authors()
+    if allow_closest and old_name not in all_known_authors:
+        closest = closest_author(old_name, list(all_known_authors.keys()))[0]
+        print(f"author '{old_name}' not found, using closest match '{closest}'")
+        old_name = closest
     if old_name in all_known_authors:
         new_name = tex_deescape(str(new_name))
         all_known_authors[new_name] = all_known_authors.pop(old_name)
-    write_all_known_authors(all_known_authors)
+        write_all_known_authors(all_known_authors)
+    else:
+        print(f'author "{old_name}" not found')
 
 
 def update_author_email(name: str, email: str):
