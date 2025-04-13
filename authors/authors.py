@@ -158,7 +158,7 @@ def update_author_name(old_name: str, new_name: str, allow_closest: bool = False
 
 
 def update_author_email(name: str, email: str):
-    """ Update the email of an author
+    """Update the email of an author
 
     Args:
         name (str): The name of the author
@@ -166,12 +166,12 @@ def update_author_email(name: str, email: str):
     """
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
-        all_known_authors[name]['email'] = str(email)
+        all_known_authors[name]["email"] = str(email)
     write_all_known_authors(all_known_authors)
 
 
 def update_author_orcid(name: str, orcid: str):
-    """ Update the ORCID of an author
+    """Update the ORCID of an author
 
     Args:
         name (str): The name of the author
@@ -179,17 +179,18 @@ def update_author_orcid(name: str, orcid: str):
     """
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
-        all_known_authors[name]['orcid'] = str(orcid)
+        all_known_authors[name]["orcid"] = str(orcid)
         write_all_known_authors(all_known_authors)
-        print('updated ORCID for', name)
+        print("updated ORCID for", name)
     else:
         # closest = closest_author(name, list(all_known_authors.keys()))[0]
         print(f'author "{name}" not found')
 
 
-def update_author_affiliations(name: str, affiliations: List[str],
-                               strategy: Literal['merge', 'replace'] = 'merge'):
-    """ Update the affiliations of an author
+def update_author_affiliations(
+    name: str, affiliations: List[str], strategy: Literal["merge", "replace"] = "merge"
+):
+    """Update the affiliations of an author
 
     Args:
         name (str): The name of the author
@@ -204,18 +205,18 @@ def update_author_affiliations(name: str, affiliations: List[str],
 
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
-        if strategy == 'merge':
-            existing = all_known_authors[name]['affiliations']
+        if strategy == "merge":
+            existing = all_known_authors[name]["affiliations"]
             new = affiliations + existing
-            all_known_authors[name]['affiliations'] = new
-        elif strategy == 'replace':
-            all_known_authors[name]['affiliations'] = affiliations
+            all_known_authors[name]["affiliations"] = new
+        elif strategy == "replace":
+            all_known_authors[name]["affiliations"] = affiliations
 
     write_all_known_authors(all_known_authors)
 
 
 def update_author_acknowledgements(name: str, acknowledgements: str):
-    """ Update the acknowledgements of an author
+    """Update the acknowledgements of an author
 
     Args:
         name (str): The name of the author
@@ -223,12 +224,12 @@ def update_author_acknowledgements(name: str, acknowledgements: str):
     """
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
-        all_known_authors[name]['acknowledgements'] = str(acknowledgements)
+        all_known_authors[name]["acknowledgements"] = str(acknowledgements)
     write_all_known_authors(all_known_authors)
 
 
 def update_author_nickname(name: str, nickname: str):
-    """ Update the nickname of an author
+    """Update the nickname of an author
 
     Args:
         name (str): The name of the author
@@ -236,12 +237,12 @@ def update_author_nickname(name: str, nickname: str):
     """
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
-        all_known_authors[name]['nickname'] = str(nickname)
+        all_known_authors[name]["nickname"] = str(nickname)
     write_all_known_authors(all_known_authors)
 
 
 def delete_author(name: str):
-    """ Remove an author from the known author list
+    """Remove an author from the known author list
 
     Args:
         name (str): name of the author to remove
@@ -256,7 +257,7 @@ def delete_author(name: str):
 
 
 def change_affiliation(old: str, new: str):
-    """ Change an affiliation
+    """Change an affiliation
 
     Args:
         old (str): old name of the affiliation, which will be replaced
@@ -264,20 +265,20 @@ def change_affiliation(old: str, new: str):
     """
     all_known_authors = get_all_known_authors()
     for k, v in all_known_authors.items():
-        affs = v['affiliations']
+        affs = v["affiliations"]
         for i, aff in enumerate(affs):
             if old in aff:
                 print(k, aff, type(aff))
                 if isinstance(aff, str):
-                    v['affiliations'][i] = new
+                    v["affiliations"][i] = new
                 elif isinstance(aff, dict):
-                    v['affiliations'][i][new] = aff[old]
-                    v['affiliations'][i].pop(old)
+                    v["affiliations"][i][new] = aff[old]
+                    v["affiliations"][i].pop(old)
     write_all_known_authors(all_known_authors)
 
 
 def set_affiliation_label(affiliation: str, label: str):
-    """ Set the label for a given affiliation
+    """Set the label for a given affiliation
 
     Args:
         affiliation (str): the affiliation to set the label for
@@ -285,123 +286,140 @@ def set_affiliation_label(affiliation: str, label: str):
     """
     all_known_authors = get_all_known_authors()
     for k, v in all_known_authors.items():
-        if affiliation in v['affiliations']:
+        if affiliation in v["affiliations"]:
             aff = []
-            for a in v['affiliations']:
+            for a in v["affiliations"]:
                 if a == affiliation:
-                    aff.append({affiliation: {'label': str(label)}})
+                    aff.append({affiliation: {"label": str(label)}})
                 else:
                     aff.append(a)
-            all_known_authors[k]['affiliations'] = aff
+            all_known_authors[k]["affiliations"] = aff
 
     write_all_known_authors(all_known_authors)
 
 
 def _health_check(check_affiliations: bool = True):
     all_known_authors = get_all_known_authors()
-    print(f'there are {len(all_known_authors)} known authors')
-    print('checking for duplicate / similar author names...')
+    print(f"there are {len(all_known_authors)} known authors")
+    print("checking for duplicate / similar author names...")
     names = list(all_known_authors.keys())
     if len(names) == len(set(names)):
-        print(' no exact duplicates')
+        print(" no exact duplicates")
 
     names_initials_last = [name_to_initials_last(name) for name in names]
     if len(names_initials_last) == len(set(names_initials_last)):
-        print(' no duplicates in initials, last name')
+        print(" no duplicates in initials, last name")
     else:
-        print(' duplicates in initials, last name:')
+        print(" duplicates in initials, last name:")
         c = Counter(names_initials_last)
         for name, counts in c.items():
             if counts > 1:
-                print('  ', name, 'occurs', counts, 'times')
+                print("  ", name, "occurs", counts, "times")
 
     if not check_affiliations:
         return
 
     affiliations = list(set(get_all_affiliations()))
     affiliation_label = get_all_affiliations_with_label()
-    print(f'there are {len(affiliations)} unique affiliations')
+    print(f"there are {len(affiliations)} unique affiliations")
 
-    print('setting affiliation labels...')
+    print("setting affiliation labels...")
     for i, affiliation in enumerate(affiliations):
-        print(f'progress {i + 1}/{len(affiliations)}', end='\r')
+        print(f"progress {i + 1}/{len(affiliations)}", end="\r")
         if affiliation in affiliation_label:
             set_affiliation_label(affiliation, affiliation_label[affiliation])
 
-    print('checking for duplicate / similar affiliations...')
+    print("checking for duplicate / similar affiliations...")
     from .utils import lev_dist
+
     for i, affiliation1 in enumerate(affiliations):
-        print(f'progress {i + 1}/{len(affiliations)}', end='\r')
-        for j, affiliation2 in enumerate(affiliations[i + 1:]):
+        print(f"progress {i + 1}/{len(affiliations)}", end="\r")
+        for j, affiliation2 in enumerate(affiliations[i + 1 :]):
             dist = lev_dist(affiliation1, affiliation2)
             prob = 1 - 2 * dist / (len(affiliation1) + len(affiliation2))
             if prob > 0.7:
-                print(f'{dist=}, {prob=}')
-                print(' ' + affiliation1)
-                print(' ' + affiliation2)
-                opt = input(' (1) keep first (2) keep second (3) keep both : ')
-                if opt == '1':
+                print(f"{dist=}, {prob=}")
+                print(" " + affiliation1)
+                print(" " + affiliation2)
+                opt = input(" (1) keep first (2) keep second (3) keep both : ")
+                if opt == "1":
                     change_affiliation(affiliation2, affiliation1)
-                elif opt == '2':
+                elif opt == "2":
                     change_affiliation(affiliation1, affiliation2)
-                elif opt == '3':
+                elif opt == "3":
                     pass
 
 
 class Authors:
-    """ Hold information about the authors of a paper """
-    def __init__(self, load_from: str) -> None:
+    """Hold information about the authors of a paper"""
+
+    def __init__(self, load_from: str, warn_unknown: bool = True) -> None:
         r"""
         Args:
             load_from (str):
                 From where to load the author list. Can be a '\n'-separated
                 string with the author names or the name of a file containing
                 the list of authors.
+            warn_unknown (bool):
+                Whether to warn about unknown authors
         Examples:
             Authors('First Name\nSecond Name')
             Authors('author_list.txt')
         """
         if not isinstance(load_from, str):
-            raise TypeError('`load_from` must be a string')
-        
-        if load_from == '':
-            raise ValueError('`load_from` should not be an empty string')
+            raise TypeError("`load_from` must be a string")
 
-        if load_from == 'all':
-            load_from = '\n'.join([n for n in get_all_known_authors().keys()])
+        if load_from == "":
+            raise ValueError("`load_from` should not be an empty string")
+
+        if load_from == "all":
+            load_from = "\n".join([n for n in get_all_known_authors().keys()])
 
         here = os.path.dirname(os.path.abspath(__file__))
-        all_known_authors_file = os.path.join(here, 'data',
-                                              'all_known_authors.yml')
-        self.all_known_authors = load(open(all_known_authors_file, encoding='utf-8'))
+        all_known_authors_file = os.path.join(here, "data", "all_known_authors.yml")
+        self.all_known_authors = load(open(all_known_authors_file, encoding="utf-8"))
 
         if os.path.exists(load_from):
-            A = list(map(str.strip, open(load_from, encoding='utf-8').readlines()))
+            A = list(map(str.strip, open(load_from, encoding="utf-8").readlines()))
         else:
             assert isinstance(load_from, str)
             A = load_from.splitlines()
 
-        self.all_authors = [a for a in A if a != '']
+        self.all_authors = [a for a in A if a != ""]
         self.last_names = [name_to_last(a).lower() for a in A]
         self.first_author = self.all_authors[0]
         self.known = self._get_known_authors()
 
+    def __repr__(self):
+        return f"Authors({len(self.all_authors)} authors, {sum(self.known)} known)"
+
+    @property
+    def unknown_authors(self):
+        return [a for a, known in zip(self.all_authors, self.known) if not known]
+
     def _get_known_authors(self) -> List:
-        known_last_names = [
-            name_to_last(a).lower() for a in self.all_known_authors.keys()
-        ]
+        known_last_names = []
+        known_nicknames = []
+        for a in self.all_known_authors.keys():
+            known_last_names.append(name_to_last(a).casefold())
+            known_nicknames.append(self.all_known_authors[a].get("nickname", ""))
+
         known = []
         for last_name in self.last_names:
-            if last_name.lower() in known_last_names:
+            if last_name.casefold() in known_last_names:
                 known.append(True)
-            elif tex_deescape(last_name).lower() in known_last_names:
+            elif tex_deescape(last_name).casefold() in known_last_names:
+                known.append(True)
+            elif last_name.casefold() in known_nicknames:
                 known.append(True)
             else:
+                print(f"!! unknown author: {last_name}")
                 known.append(False)
         return known
 
-    def _get_author_list(self, alphabetical=False, alphabetical_after=1,
-                         alphabetical_groups=None):
+    def _get_author_list(
+        self, alphabetical=False, alphabetical_after=1, alphabetical_groups=None
+    ):
         if alphabetical:
             # argsort
             def argsort(seq):
@@ -415,8 +433,7 @@ class Authors:
                 # authors which are in alphabetical order, sorted
                 sauthors = argsort(self.last_names[alphabetical_after:])
                 for i in sauthors:
-                    author_list.append(
-                        self.all_authors[alphabetical_after:][i])
+                    author_list.append(self.all_authors[alphabetical_after:][i])
                     known_authors.append(self.known[alphabetical_after:][i])
 
             # sort alphabetically in groups (alphabetical_after is ignored)
@@ -428,8 +445,7 @@ class Authors:
                 known_authors = self.known[:alphabetical_after]
 
                 # authors which are in alphabetical order, sorted
-                for g1, g2 in zip(alphabetical_groups,
-                                  alphabetical_groups[1:]):
+                for g1, g2 in zip(alphabetical_groups, alphabetical_groups[1:]):
                     sauthors = argsort(self.last_names[g1:g2])
                     for i in sauthors:
                         author_list.append(self.all_authors[g1:][i])
