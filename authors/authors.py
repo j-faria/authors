@@ -1,12 +1,19 @@
-""" Authors of your next scientific article """
+"""Authors of your next scientific article"""
 
 from collections import Counter
 import os
 from typing import List, Literal, Tuple, Union
+import warnings
 from yaml import safe_load as load, safe_dump as dump
 
-from .utils import (name_to_initials_last, name_to_last, tex_escape,
-                    tex_deescape, humanize_yaml, closest_author)
+from .utils import (
+    name_to_initials_last,
+    name_to_last,
+    tex_escape,
+    tex_deescape,
+    humanize_yaml,
+    closest_author,
+)
 from .latex_pdf_utils import preview_AandA, preview_MNRAS
 
 
