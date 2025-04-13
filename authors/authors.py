@@ -458,21 +458,43 @@ class Authors:
         return author_list, known_authors
 
     def query_author(self, author: str):
+        if author in self.all_known_authors:
+            return author, self.all_known_authors[author]
+
         last_name = name_to_last(author)
         for name, data in self.all_known_authors.items():
             _last = name_to_last(name)
-            if last_name == _last:
+            if last_name.casefold() == _last.casefold():
                 return name, data
             if tex_deescape(last_name) == _last:
                 return name, data
+            if last_name.casefold() in data.get("nickname", "").casefold():
+                return name, data
+        return ValueError("unreachable")
 
-    def AandA(self, alphabetical: bool = False, alphabetical_after: int = 1,
-              alphabetical_groups: List[int] = None,
-              force_initials: bool = True, add_orcids: bool = True,
-              preview: bool = False, save_to_file: str = None):
-        r""" Provide the \author and \institute LaTeX tags for A&A
+    def AandA(
+        self,
+        show=True,
+        add_orcids: bool = True,
+        preview: bool = False,
+        alphabetical: bool = False,
+        alphabetical_after: int = 1,
+        alphabetical_groups: List[int] = None,
+        force_initials: bool = True,
+        save_to_file: str = None,
+    ):
+        r"""Provide the \author and \institute LaTeX tags for A&A
 
         Args:
+            show (bool, optional):
+                Whether to print the \author and \institute tags (otherwise just
+                return them in a string).
+            add_orcids (bool, optional):
+                Whether to add ORCID links for authors that have them. Note that
+                this may require additional LaTeX, and may not be accepted by
+                every journal.
+            preview (bool, optional):
+                Try to compile and preview a template LaTeX file.
             alphabetical (bool, optional):
                 Whether to sort author (last) names alphabetically.
             alphabetical_after (int, optional):
@@ -489,47 +511,45 @@ class Authors:
                       (this would be equivalent to using alphabetical_after=3)
             force_initials (bool, optional):
                 If True, force the author names to be F. M. Last
-            add_orcids (bool, optional):
-                Whether to add ORCID links for authors that have them. Note that
-                this may require additional LaTeX, and may not be accepted by
-                every journal.
-            preview (bool, optional):
-                Try to compile and preview a template LaTeX file.
             save_to_file (str, optional):
                 File where to save the LaTeX tags
         """
         author_list, known_authors = self._get_author_list(
-            alphabetical, alphabetical_after, alphabetical_groups)
+            alphabetical, alphabetical_after, alphabetical_groups
+        )
 
         institutes_in_list = []
         labels = {}
 
-        text = ''
+        text = ""
 
         # print the authors first
-        text += r'\author{' + '\n'
+        text += r"\author{" + "\n"
 
         for i, author in enumerate(author_list):
             if known_authors[i]:
                 name, data = self.query_author(author)
-                institutes = data['affiliations']
+                institutes = data["affiliations"]
 
-                if force_initials:
-                    name = name_to_initials_last(name)
+                if "spelling" in data:
+                    name = data["spelling"]
+                else:
+                    if force_initials:
+                        name = name_to_initials_last(name)
 
                 # don't line-break people's names, it's not polite
-                name = name.replace(' ', '~')
+                name = name.replace(" ", "~")
                 numbers = []
 
-                text += f'  {name} '
+                text += f"  {name} "
 
-                text += r'\inst{'
+                text += r"\inst{"
 
                 for j, institute in enumerate(institutes):
                     label = None
                     if isinstance(institute, dict):
                         _institute = list(institute.keys())[0]
-                        label = institute[_institute]['label']
+                        label = institute[_institute]["label"]
                         institute = _institute
 
                     if institute not in labels:
@@ -540,70 +560,84 @@ class Authors:
 
                     numbers.append(institutes_in_list.index(institute) + 1)
 
-                    end = ', ' if j < (len(institutes) - 1) else ''
+                    end = ", " if j < (len(institutes) - 1) else ""
                     if labels[institute] is None:
-                        text += f'\\ref{{ inst{numbers[-1]} }}{end}'
+                        text += f"\\ref{{ inst{numbers[-1]} }}{end}"
                     else:
-                        text += f'\\ref{{{labels[institute]}}}{end}'
+                        text += f"\\ref{{{labels[institute]}}}{end}"
 
                 # thanks = queryA[0][3]
                 # if thanks is not None:
                 #     text += rf', \thanks{{ {thanks} }}'
 
-                text += r'} '
+                text += r"} "
 
-                if 'orcid' in data and add_orcids:
+                if "orcid" in data and add_orcids:
                     text += f"\\orcidlink{{{data['orcid']}}} "
 
-
             else:
-                text += f'  {author} '
-                text += r'\inst{unknown} '
+                text += f"  {author} "
+                text += r"\inst{unknown} "
 
             if i < (len(self.all_authors) - 1):
-                text += r'\and' + '\n'
+                text += r"\and" + "\n"
 
-        text += '\n' + '}' + '\n\n'
+        text += "\n" + "}" + "\n\n"
 
         # then print the institutes
-        text += r'\institute{' + '\n'
+        text += r"\institute{" + "\n"
 
         for i, institute in enumerate(institutes_in_list):
             escaped_institute = tex_escape(institute)
             label = labels[institute]
-            text += f'  {escaped_institute} '
+            text += f"  {escaped_institute} "
 
             if label is None:
-                text += rf'\label{{ inst{i+1} }} '
+                text += rf"\label{{ inst{i + 1} }} "
             else:
-                text += rf'\label{{{label}}} '
+                text += rf"\label{{{label}}} "
 
             if institute == institutes_in_list[-1]:
-                text += '\n'
+                text += "\n"
             else:
-                text += r'\and' '\n'
+                text += r"\and" "\n"
 
-        text += r'}' + '\n'
+        text += r"}" + "\n"
 
-        print(text)
+        if show:
+            print(text)
 
         if save_to_file is not None:
-            with open(save_to_file, 'w') as f:
+            with open(save_to_file, "w", encoding="utf-8") as f:
                 print(text, file=f)
 
         if preview:
             longauth = len(institutes_in_list) > 20
             preview_AandA(text, longauth=longauth)
 
+        return text
 
-    def MNRAS(self, line_breaks: int = 6, alphabetical: bool = False,
-              alphabetical_after: int = 1,
-              alphabetical_groups: List[int] = None,
-              force_initials: bool = True, add_orcids: bool = True,
-              preview: bool = False, save_to_file: str = None):
-        r""" Provide the \author LaTeX tag for MNRAS
+    def MNRAS(
+        self,
+        show: bool = True,
+        preview: bool = False,
+        add_orcids: bool = True,
+        line_breaks: int = 6,
+        alphabetical: bool = False,
+        alphabetical_after: int = 1,
+        alphabetical_groups: List[int] = None,
+        force_initials: bool = True,
+        save_to_file: str = None,
+    ):
+        r"""Provide the \author LaTeX tag for MNRAS
 
         Args:
+            show (bool, optional):
+                Whether to print the LaTeX tags (otherwise, just return them)
+            preview (bool, optional):
+                NO DOC
+            add_orcids (bool, optional):
+                NO DOC
             alphabetical (bool, optional):
                 Whether to sort author names alphabetically. Default is False
             alphabetical_after (int, optional):
@@ -613,51 +647,49 @@ class Authors:
                 If provided, sort author names alphabetically in groups.
                 Examples:
                   [5, 10] authors 1, 2, 3, 4, 5 use order as given
-                          authors 6, 7, 8, 9, 10 sorted alphabetically
-                          authors 11, ... sorted alphabetically
+                          authors 6, 7, 8, 9, 10 sorted alphabetically authors
+                          11, ... sorted alphabetically
                   [3] authors 1, 2, 3 use order as given
-                      authors 4, ... sorted alphabetically
-                      (this would be equivalent to using alphabetical_after=3)
+                      authors 4, ... sorted alphabetically (this would be
+                      equivalent to using alphabetical_after=3)
             force_initials (bool, optional):
                 If True, force the author names to be F. M. Last
-            preview (bool, optional):
-                NO DOC
             save_to_file (str, optional):
                 File where to save the LaTeX tags
         """
         author_list, known_authors = self._get_author_list(
-            alphabetical, alphabetical_after, alphabetical_groups)
-
+            alphabetical, alphabetical_after, alphabetical_groups
+        )
 
         institutes_in_list = []
         labels = {}
 
-        text = ''
+        text = ""
 
         # print the authors first
-        text += r'\author[]{' + '\n'
+        text += r"\author[]{" + "\n"
 
         for i, author in enumerate(author_list):
             if known_authors[i]:
                 name, data = self.query_author(author)
-                institutes = data['affiliations']
+                institutes = data["affiliations"]
 
                 if force_initials:
                     name = name_to_initials_last(name)
 
                 # don't line-break people's names, it's not polite
-                name = name.replace(' ', '~')
+                name = name.replace(" ", "~")
                 numbers = []
 
-                text += f'  {name} '
+                text += f"  {name} "
 
-                text += r'$^{'
+                text += r"$^{"
 
                 for j, institute in enumerate(institutes):
                     label = None
                     if isinstance(institute, dict):
                         _institute = list(institute.keys())[0]
-                        label = institute[_institute]['label']
+                        label = institute[_institute]["label"]
                         institute = _institute
 
                     if institute not in labels:
@@ -668,8 +700,8 @@ class Authors:
 
                     numbers.append(institutes_in_list.index(institute) + 1)
 
-                    end = r',\, ' if j < (len(institutes) - 1) else ''
-                    text += f'{numbers[-1]}{end}'
+                    end = r",\, " if j < (len(institutes) - 1) else ""
+                    text += f"{numbers[-1]}{end}"
 
                 # thanks = queryA[0][3]
                 # if thanks is not None:
@@ -678,10 +710,10 @@ class Authors:
                 # if 'orcid' in data and add_orcids:
                 #     text += rf", \, \\orcidlink{{{data['orcid']}}} "
 
-                text += r'}$'
+                text += r"}$"
 
                 if i < (len(self.all_authors) - 1):
-                    text += ', '
+                    text += ", "
 
             # else:
             #     text += f'  {author} '
@@ -691,17 +723,17 @@ class Authors:
                 text += r"\newauthor\,\!"
 
             if i < (len(self.all_authors) - 1):
-                text += '\n'
+                text += "\n"
 
-        text += '\n'
+        text += "\n"
 
         # then print the institutes
-        text += r'\\' + '\n'
+        text += r"\\" + "\n"
 
         for i, institute in enumerate(institutes_in_list):
             escaped_institute = tex_escape(institute)
             label = labels[institute]
-            text += f' $^{{{i+1}}}$ {escaped_institute} '
+            text += f" $^{{{i + 1}}}$ {escaped_institute} "
 
             # if label is None:
             #     text += rf'\label{{ inst{i+1} }} '
@@ -709,16 +741,17 @@ class Authors:
             #     text += rf'\label{{{label}}} '
 
             if institute == institutes_in_list[-1]:
-                text += '\n'
+                text += "\n"
             else:
-                text += r'\\' + '\n'
+                text += r"\\" + "\n"
 
-        text += r'}' + '\n'
+        text += r"}" + "\n"
 
-        print(text)
+        if show:
+            print(text)
 
         if save_to_file is not None:
-            with open(save_to_file, 'w') as f:
+            with open(save_to_file, "w") as f:
                 print(text, file=f)
         # \author[K. T. Smith et al.]{
         # Keith T. Smith,$^{1}$\thanks{E-mail: mn@ras.org.uk (KTS)}
@@ -735,3 +768,4 @@ class Authors:
         if preview:
             preview_MNRAS(text)
 
+        return text
