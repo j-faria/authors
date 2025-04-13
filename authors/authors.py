@@ -10,13 +10,13 @@ from .utils import (name_to_initials_last, name_to_last, tex_escape,
 from .latex_pdf_utils import preview_AandA, preview_MNRAS
 
 
-def get_all_known_authors(
-        return_filename=False) -> Union[dict, Tuple[dict, str]]:
+def get_all_known_authors(return_filename=False) -> Union[dict, Tuple[dict, str]]:
     """
     Load the dictionary of all known authors
 
     Args:
-        return_filename (bool): Whether to return the path to the yaml file
+        return_filename (bool): 
+            Whether to return the path to the yaml file
     Returns:
         known_authors (dict):
             Dictionary with information about the known authors
@@ -24,11 +24,11 @@ def get_all_known_authors(
             Only returned if `return_filename` is True. Path to the yaml file
     """
     here = os.path.dirname(os.path.abspath(__file__))
-    file = os.path.join(here, 'data', 'all_known_authors.yml')
+    file = os.path.join(here, "data", "all_known_authors.yml")
     if return_filename:
-        return load(open(file, encoding='utf-8')), file
+        return load(open(file, encoding="utf-8")), file
     else:
-        return load(open(file, encoding='utf-8'))
+        return load(open(file, encoding="utf-8"))
 
 
 def write_all_known_authors(data):
