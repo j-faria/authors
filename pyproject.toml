@@ -19,7 +19,7 @@ classifiers = [
 
 dependencies = [
     "pyaml",
-    "pyperclip",
+    # "pyperclip",
 ]
 
 [project.scripts]
