@@ -12,14 +12,16 @@ def fill_in_template(text, template, output):
                 else:
                     print(line, end='', file=fout)
 
-def compile_latex(wd, texname, pdfname):
-    print('compiling LaTeX...')
+def compile_latex(wd, texname, pdfname, open_pdf=True):
+    # print('compiling LaTeX...')
     out = subprocess.check_output(f'latexmk -f -pdf {texname}'.split(), cwd=wd)
     pdf = os.path.join(wd, pdfname)
-    os.startfile(pdf)
+    if open_pdf:
+        os.startfile(pdf)
+    return pdf
 
 
-def preview_AandA(text, longauth=False):
+def preview_AandA(text, longauth=False, open_pdf=True):
     template = os.path.join(_here_, 'templates', 'aa', 'aa-template.tex')
     output = os.path.join(_here_, 'templates', 'aa', 'aa.tex')
     assert os.path.exists(template)
@@ -37,14 +39,16 @@ def preview_AandA(text, longauth=False):
     ##
 
     path = os.path.join(_here_, 'templates', 'aa')
-    compile_latex(path, 'aa.tex', 'aa.pdf')
+    pdf = compile_latex(path, 'aa.tex', 'aa.pdf', open_pdf)
+    return pdf
 
 
-def preview_MNRAS(text):
+def preview_MNRAS(text, open_pdf=True):
     template = os.path.join(_here_, 'templates', 'mnras', 'mnras-template.tex')
     output = os.path.join(_here_, 'templates', 'mnras', 'mnras.tex')
     assert os.path.exists(template)
     fill_in_template(text, template, output)
     path = os.path.join(_here_, 'templates', 'mnras')
-    compile_latex(path, 'mnras.tex', 'mnras.pdf')
+    pdf = compile_latex(path, 'mnras.tex', 'mnras.pdf', open_pdf)
+    return pdf
 
