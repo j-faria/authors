@@ -11,7 +11,7 @@ description = "Authors of your next scientific article"
 dynamic = ["version"]
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.8"
-keywords = ["RV", "exoplanets"]
+keywords = ["science", "journals", "authors", "astronomy"]
 license = {text = "MIT"}
 classifiers = [
     "Programming Language :: Python :: 3",
