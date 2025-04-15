@@ -1,5 +1,6 @@
 import re
 from functools import lru_cache
+import unicodedata
 
 
 ENCODING_ERRORS = {
@@ -199,6 +200,10 @@ def name_to_initials(name):
     inititals = [n[0] for n in names]
     return inititals
 
+
+def strip_accents(s):
+    return ''.join(c for c in unicodedata.normalize('NFD', s) 
+                   if unicodedata.category(c) != 'Mn')
 
 def text_replace_dict(text, convert):
     regex = re.compile('|'.join(
