@@ -3,12 +3,14 @@
 from collections import Counter
 import os
 from typing import List, Literal, Tuple, Union
-import warnings
+# import pyperclip
 from yaml import safe_load as load, safe_dump as dump
 
 from .utils import (
+    name_to_initials,
     name_to_initials_last,
     name_to_last,
+    strip_accents,
     tex_escape,
     tex_deescape,
     humanize_yaml,
@@ -65,7 +67,7 @@ def get_all_affiliations():
 
 
 def get_all_affiliations_with_label():
-    """Get a dictionary of all known affiliations and corresponding labels"""
+    """Get a dictionary of all known affiliations that have a label"""
     all_known_authors = get_all_known_authors()
     aff_label = {}
     for a in all_known_authors.values():
@@ -105,7 +107,8 @@ def register_author(
             Nickname of the author. Defaults to None.
     """
     full_name = tex_deescape(str(full_name))
-    all_known_authors, _ = get_all_known_authors(return_filename=True)
+    all_known_authors = get_all_known_authors()
+    label_aff = {v: k for k, v in get_all_affiliations_with_label().items()}
 
     if full_name in all_known_authors:
         print(f'author "{full_name}" is already known')
@@ -124,7 +127,10 @@ def register_author(
 
     for aff, label in zip(affiliations, labels):
         aff = tex_deescape(str(aff))
-        if label is None:
+        if aff in label_aff:  # provided label instead of affiliation
+            aff_label = {label_aff[aff]: {"label": aff}}
+            all_known_authors[full_name]["affiliations"].append(aff_label)
+        elif label is None:
             all_known_authors[full_name]["affiliations"].append(aff)
         else:
             aff_label = {aff: {"label": label}}
@@ -164,27 +170,45 @@ def update_author_name(old_name: str, new_name: str, allow_closest: bool = False
         print(f'author "{old_name}" not found')
 
 
-def update_author_email(name: str, email: str):
+def update_author_email(name: str, email: str, allow_closest: bool = False):
     """Update the email of an author
 
     Args:
-        name (str): The name of the author
-        email (str): The new email address
+        name (str):
+            The name of the author
+        email (str):
+            The new email address
+        allow_closest (bool, optional):
+            If True and `name` is not found, try to find the closest match
+            in the list of known authors
     """
     all_known_authors = get_all_known_authors()
+    if allow_closest and name not in all_known_authors:
+        closest = closest_author(name, list(all_known_authors.keys()))[0]
+        print(f"author '{name}' not found, using closest match '{closest}'")
+        name = closest
     if name in all_known_authors:
         all_known_authors[name]["email"] = str(email)
     write_all_known_authors(all_known_authors)
 
 
-def update_author_orcid(name: str, orcid: str):
+def update_author_orcid(name: str, orcid: str, allow_closest: bool = False):
     """Update the ORCID of an author
 
     Args:
-        name (str): The name of the author
-        orcid (str): The new ORCID
+        name (str):
+            The name of the author
+        orcid (str):
+            The new ORCID
+        allow_closest (bool, optional):
+            If True and `name` is not found, try to find the closest match
+            in the list of known authors
     """
     all_known_authors = get_all_known_authors()
+    if allow_closest and name not in all_known_authors:
+        closest = closest_author(name, list(all_known_authors.keys()))[0]
+        print(f"author '{name}' not found, using closest match '{closest}'")
+        name = closest
     if name in all_known_authors:
         all_known_authors[name]["orcid"] = str(orcid)
         write_all_known_authors(all_known_authors)
@@ -323,8 +347,6 @@ def _health_check(check_affiliations: bool = True):
             if counts > 1:
                 print("  ", name, "occurs", counts, "times")
 
-    if not check_affiliations:
-        return
 
     affiliations = list(set(get_all_affiliations()))
     affiliation_label = get_all_affiliations_with_label()
@@ -336,6 +358,8 @@ def _health_check(check_affiliations: bool = True):
         if affiliation in affiliation_label:
             set_affiliation_label(affiliation, affiliation_label[affiliation])
 
+    if not check_affiliations:
+        return
     print("checking for duplicate / similar affiliations...")
     from .utils import lev_dist
 
@@ -405,10 +429,11 @@ class Authors:
         return [a for a, known in zip(self.all_authors, self.known) if not known]
 
     def _get_known_authors(self) -> List:
-        known_last_names = []
+        known_last_names, known_last_names_norm = [], []
         known_nicknames = []
         for a in self.all_known_authors.keys():
             known_last_names.append(name_to_last(a).casefold())
+            known_last_names_norm.append(strip_accents(name_to_last(a).casefold()))
             known_nicknames.append(self.all_known_authors[a].get("nickname", ""))
 
         known = []
@@ -416,6 +441,8 @@ class Authors:
             if last_name.casefold() in known_last_names:
                 known.append(True)
             elif tex_deescape(last_name).casefold() in known_last_names:
+                known.append(True)
+            elif last_name.casefold() in known_last_names_norm:
                 known.append(True)
             elif last_name.casefold() in known_nicknames:
                 known.append(True)
@@ -477,6 +504,8 @@ class Authors:
                 return name, data
             if last_name.casefold() in data.get("nickname", "").casefold():
                 return name, data
+            if last_name.casefold() in strip_accents(_last).casefold():
+                return name, data
         return ValueError("unreachable")
 
     def _get_name(self, name: str, data: dict, force_initials: bool = True):
@@ -499,6 +528,7 @@ class Authors:
         alphabetical_groups: List[int] = None,
         force_initials: bool = True,
         save_to_file: str = None,
+        copy_to_clipboard: bool = False,
     ):
         r"""Provide the \author and \institute LaTeX tags for A&A
 
@@ -530,6 +560,8 @@ class Authors:
                 If True, force the author names to be F. M. Last
             save_to_file (str, optional):
                 File where to save the LaTeX tags
+            copy_to_clipboard (bool, optional):
+                Copy the LaTeX tags to the clipboard
         """
         author_list, known_authors = self._get_author_list(
             alphabetical, alphabetical_after, alphabetical_groups
@@ -623,6 +655,9 @@ class Authors:
             longauth = len(institutes_in_list) > 20
             preview_AandA(text, longauth=longauth)
 
+        # if copy_to_clipboard:
+        #     pyperclip.copy(text)
+
         return text
 
     def MNRAS(
@@ -636,6 +671,7 @@ class Authors:
         alphabetical_groups: List[int] = None,
         force_initials: bool = True,
         save_to_file: str = None,
+        copy_to_clipboard: bool = False,
     ):
         r"""Provide the \author LaTeX tag for MNRAS
 
@@ -664,6 +700,8 @@ class Authors:
                 If True, force the author names to be F. M. Last
             save_to_file (str, optional):
                 File where to save the LaTeX tags
+            copy_to_clipboard (bool, optional):
+                Copy the LaTeX tags to the clipboard
         """
         author_list, known_authors = self._get_author_list(
             alphabetical, alphabetical_after, alphabetical_groups
@@ -746,5 +784,8 @@ class Authors:
 
         if preview:
             preview_MNRAS(text)
+
+        # if copy_to_clipboard:
+        #     pyperclip.copy(text)
 
         return text
