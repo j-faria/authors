@@ -134,7 +134,14 @@ def bitapSearch(haystack, needle, maxErrors):
     return ("", -1)
 
 
-def closest_author(author, authors, closest=1, distance='bitap'):
+def closest_author(author, authors, closest=1, distance='within'):
+    if distance == 'within':
+        within = [authors_i for authors_i in authors if author.casefold() in authors_i.casefold()]
+        if len(within) > 0:
+            return within[:closest]
+        else:
+            distance = 'bitap'
+
     if distance == 'bitap':
         d = [bitapSearch(a, author, len(a))[1] for a in authors]
         return [authors[i] for i in argsort(d)[:closest]]
