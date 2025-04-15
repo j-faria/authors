@@ -479,6 +479,16 @@ class Authors:
                 return name, data
         return ValueError("unreachable")
 
+    def _get_name(self, name: str, data: dict, force_initials: bool = True):
+        if "spelling" in data:
+            name = data["spelling"]
+        else:
+            if force_initials:
+                name = name_to_initials_last(name)
+        # don't line-break people's names, it's not polite
+        name = name.replace(" ", "~")
+        return name
+
     def AandA(
         self,
         show=True,
@@ -536,16 +546,11 @@ class Authors:
         for i, author in enumerate(author_list):
             if known_authors[i]:
                 name, data = self.query_author(author)
+
+                name = self._get_name(name, data, force_initials)
+
                 institutes = data["affiliations"]
 
-                if "spelling" in data:
-                    name = data["spelling"]
-                else:
-                    if force_initials:
-                        name = name_to_initials_last(name)
-
-                # don't line-break people's names, it's not polite
-                name = name.replace(" ", "~")
                 numbers = []
 
                 text += f"  {name} "
@@ -572,10 +577,6 @@ class Authors:
                         text += f"\\ref{{ inst{numbers[-1]} }}{end}"
                     else:
                         text += f"\\ref{{{labels[institute]}}}{end}"
-
-                # thanks = queryA[0][3]
-                # if thanks is not None:
-                #     text += rf', \thanks{{ {thanks} }}'
 
                 text += r"} "
 
@@ -679,13 +680,11 @@ class Authors:
         for i, author in enumerate(author_list):
             if known_authors[i]:
                 name, data = self.query_author(author)
+
+                name = self._get_name(name, data, force_initials)
+
                 institutes = data["affiliations"]
 
-                if force_initials:
-                    name = name_to_initials_last(name)
-
-                # don't line-break people's names, it's not polite
-                name = name.replace(" ", "~")
                 numbers = []
 
                 text += f"  {name} "
@@ -710,21 +709,10 @@ class Authors:
                     end = r",\, " if j < (len(institutes) - 1) else ""
                     text += f"{numbers[-1]}{end}"
 
-                # thanks = queryA[0][3]
-                # if thanks is not None:
-                #     text += rf', \thanks{{ {thanks} }}'
-
-                # if 'orcid' in data and add_orcids:
-                #     text += rf", \, \\orcidlink{{{data['orcid']}}} "
-
                 text += r"}$"
 
                 if i < (len(self.all_authors) - 1):
                     text += ", "
-
-            # else:
-            #     text += f'  {author} '
-            #     text += r'\inst{unknown} '
 
             if (i + 1) % line_breaks == 0:
                 text += r"\newauthor\,\!"
@@ -742,11 +730,6 @@ class Authors:
             label = labels[institute]
             text += f" $^{{{i + 1}}}$ {escaped_institute} "
 
-            # if label is None:
-            #     text += rf'\label{{ inst{i+1} }} '
-            # else:
-            #     text += rf'\label{{{label}}} '
-
             if institute == institutes_in_list[-1]:
                 text += "\n"
             else:
@@ -760,17 +743,6 @@ class Authors:
         if save_to_file is not None:
             with open(save_to_file, "w") as f:
                 print(text, file=f)
-        # \author[K. T. Smith et al.]{
-        # Keith T. Smith,$^{1}$\thanks{E-mail: mn@ras.org.uk (KTS)}
-        # A. N. Other,$^{2}$
-        # Third Author$^{2,3}$
-        # and Fourth Author$^{3}$
-        # \\
-        # % List of institutions
-        # $^{1}$Royal Astronomical Society, Burlington House, Piccadilly, London W1J 0BQ, UK\\
-        # $^{2}$Department, Institution, Street Address, City Postal Code, Country\\
-        # $^{3}$Another Department, Different Institution, Street Address, City Postal Code, Country
-        # }
 
         if preview:
             preview_MNRAS(text)
