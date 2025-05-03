@@ -4,6 +4,8 @@
 
  ## the [list](https://github.com/j-faria/authors/blob/main/authors/data/all_known_authors.yml) of known authors is **public!**
 
+</div>
+
 ### Installation
 
 ```
