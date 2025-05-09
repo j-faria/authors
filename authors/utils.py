@@ -189,6 +189,8 @@ def name_to_initials_last(name):
     names = name.split(' ')
     initials = []
     for n in names[:-1]:
+        if n == '':
+            continue
         if '-' in n:
             initials.append('-'.join([f'{p[0]}.' for p in n.split('-')]))
         else:
@@ -204,7 +206,7 @@ def name_to_initials_last(name):
 def name_to_initials(name):
     name = name.replace('  ', ' ')
     names = name.split(' ')
-    inititals = [n[0] for n in names]
+    inititals = [n[0] for n in names if n != '']
     return inititals
 
 
