@@ -650,274 +650,57 @@ class Authors(AandA, MNRAS):
         name = name.replace(" ", "~")
         return name
 
-    def AandA(
-        self,
-        show=True,
-        add_orcids: bool = True,
-        preview: bool = False,
-        alphabetical: bool = False,
-        alphabetical_after: int = 1,
-        alphabetical_groups: List[int] = None,
-        force_initials: bool = True,
-        save_to_file: str = None,
-        copy_to_clipboard: bool = False,
-    ):
-        r"""Provide the \author and \institute LaTeX tags for A&A
-
-        Args:
-            show (bool, optional):
-                Whether to print the \author and \institute tags (otherwise just
-                return them in a string).
-            add_orcids (bool, optional):
-                Whether to add ORCID links for authors that have them. Note that
-                this may require additional LaTeX, and may not be accepted by
-                every journal.
-            preview (bool, optional):
-                Try to compile and preview a template LaTeX file.
-            alphabetical (bool, optional):
-                Whether to sort author (last) names alphabetically.
-            alphabetical_after (int, optional):
-                Sort author names alphabetically *after* this author. By
-                default, sort after the first author.
-            alphabetical_groups (List[int], optional):
-                If provided, sort author names alphabetically in groups.
-                Examples:
-                  [5, 10] authors 1, 2, 3, 4, 5 use order as given
-                          authors 6, 7, 8, 9, 10 sorted alphabetically
-                          authors 11, ... sorted alphabetically
-                  [3] authors 1, 2, 3 use order as given
-                      authors 4, ... sorted alphabetically
-                      (this would be equivalent to using alphabetical_after=3)
-            force_initials (bool, optional):
-                If True, force the author names to be F. M. Last
-            save_to_file (str, optional):
-                File where to save the LaTeX tags
-            copy_to_clipboard (bool, optional):
-                Copy the LaTeX tags to the clipboard
-        """
-        author_list, known_authors = self._get_author_list(
-            alphabetical, alphabetical_after, alphabetical_groups
-        )
-
+    @property
+    def institutes_in_list(self):
         institutes_in_list = []
-        labels = {}
+        for i, author in enumerate(self.all_authors):
+            if not self.known[i]:
+                continue
+            _, data = self.query_author(author)
+            institutes = data["affiliations"]
+            for institute in institutes:
+                if isinstance(institute, dict):
+                    institute = list(institute.keys())[0]
+            if institute not in institutes_in_list:
+                institutes_in_list.append(institute)
+        return institutes_in_list
 
-        text = ""
+    @property
+    def numbers(self):
+        numbers = []
+        for i, author in enumerate(self.all_authors):
+            if not self.known[i]:
+                continue
+            numbers_i = []
+            _, data = self.query_author(author)
+            institutes = data["affiliations"]
+            for institute in institutes:
+                if isinstance(institute, dict):
+                    institute = list(institute.keys())[0]
+                numbers_i.append(self.institutes_in_list.index(institute) + 1)
+            numbers.append(numbers_i)
+        return numbers
 
-        # print the authors first
-        text += r"\author{" + "\n"
+    def acknowledgements(self, show: bool = True, save_to_file: str = None):
+        from hashlib import md5
+        from collections import defaultdict
 
-        for i, author in enumerate(author_list):
-            if known_authors[i]:
-                name, data = self.query_author(author)
+        hash_akn = defaultdict(str)
+        hash_names = defaultdict(list)
+        for author in self.all_authors:
+            name, data = self.query_author(author)
+            if "acknowledgements" in data:
+                print(name)
+                akn = data["acknowledgements"]
+                hash_akn[md5(akn.encode("utf-8")).hexdigest()] = akn
+                hash_names[md5(akn.encode("utf-8")).hexdigest()].append(name)
 
-                name = self._get_name(name, data, force_initials)
+        for (h1, akn), (h2, names) in zip(hash_akn.items(), hash_names.items()):
+            if "__name__" in akn:
+                initials = " and ".join(
+                    ["".join(name_to_initials(name)) for name in names]
+                )
+                akn = akn.replace("__name__", initials)
+            print(akn)
 
-                institutes = data["affiliations"]
-
-                numbers = []
-
-                text += f"  {name} "
-
-                text += r"\inst{"
-
-                for j, institute in enumerate(institutes):
-                    label = None
-                    if isinstance(institute, dict):
-                        _institute = list(institute.keys())[0]
-                        label = institute[_institute]["label"]
-                        institute = _institute
-
-                    if institute not in labels:
-                        labels[institute] = label
-
-                    if institute not in institutes_in_list:
-                        institutes_in_list.append(institute)
-
-                    numbers.append(institutes_in_list.index(institute) + 1)
-
-                    end = ", " if j < (len(institutes) - 1) else ""
-                    if labels[institute] is None:
-                        text += f"\\ref{{ inst{numbers[-1]} }}{end}"
-                    else:
-                        text += f"\\ref{{{labels[institute]}}}{end}"
-
-                text += r"} "
-
-                if "orcid" in data and add_orcids:
-                    text += f"\\orcidlink{{{data['orcid']}}} "
-
-            else:
-                text += f"  {author} "
-                text += r"\inst{unknown} "
-
-            if i < (len(self.all_authors) - 1):
-                text += r"\and" + "\n"
-
-        text += "\n" + "}" + "\n\n"
-
-        # then print the institutes
-        text += r"\institute{" + "\n"
-
-        for i, institute in enumerate(institutes_in_list):
-            escaped_institute = tex_escape(institute)
-            label = labels[institute]
-            text += f"  {escaped_institute} "
-
-            if label is None:
-                text += rf"\label{{ inst{i + 1} }} "
-            else:
-                text += rf"\label{{{label}}} "
-
-            if institute == institutes_in_list[-1]:
-                text += "\n"
-            else:
-                text += r"\and" "\n"
-
-        text += r"}" + "\n"
-
-        if show:
-            print(text)
-
-        if save_to_file is not None:
-            with open(save_to_file, "w", encoding="utf-8") as f:
-                print(text, file=f)
-
-        if preview:
-            longauth = len(institutes_in_list) > 20
-            preview_AandA(text, longauth=longauth)
-
-        # if copy_to_clipboard:
-        #     pyperclip.copy(text)
-
-        return text
-
-    def MNRAS(
-        self,
-        show: bool = True,
-        preview: bool = False,
-        add_orcids: bool = True,
-        line_breaks: int = 6,
-        alphabetical: bool = False,
-        alphabetical_after: int = 1,
-        alphabetical_groups: List[int] = None,
-        force_initials: bool = True,
-        save_to_file: str = None,
-        copy_to_clipboard: bool = False,
-    ):
-        r"""Provide the \author LaTeX tag for MNRAS
-
-        Args:
-            show (bool, optional):
-                Whether to print the LaTeX tags (otherwise, just return them)
-            preview (bool, optional):
-                NO DOC
-            add_orcids (bool, optional):
-                NO DOC
-            alphabetical (bool, optional):
-                Whether to sort author names alphabetically. Default is False
-            alphabetical_after (int, optional):
-                Sort author names alphabetically *after* this author. By
-                default, sort after the first author.
-            alphabetical_groups (List[int], optional):
-                If provided, sort author names alphabetically in groups.
-                Examples:
-                  [5, 10] authors 1, 2, 3, 4, 5 use order as given
-                          authors 6, 7, 8, 9, 10 sorted alphabetically authors
-                          11, ... sorted alphabetically
-                  [3] authors 1, 2, 3 use order as given
-                      authors 4, ... sorted alphabetically (this would be
-                      equivalent to using alphabetical_after=3)
-            force_initials (bool, optional):
-                If True, force the author names to be F. M. Last
-            save_to_file (str, optional):
-                File where to save the LaTeX tags
-            copy_to_clipboard (bool, optional):
-                Copy the LaTeX tags to the clipboard
-        """
-        author_list, known_authors = self._get_author_list(
-            alphabetical, alphabetical_after, alphabetical_groups
-        )
-
-        institutes_in_list = []
-        labels = {}
-
-        text = ""
-
-        # print the authors first
-        text += r"\author[]{" + "\n"
-
-        for i, author in enumerate(author_list):
-            if known_authors[i]:
-                name, data = self.query_author(author)
-
-                name = self._get_name(name, data, force_initials)
-
-                institutes = data["affiliations"]
-
-                numbers = []
-
-                text += f"  {name} "
-
-                text += r"$^{"
-
-                for j, institute in enumerate(institutes):
-                    label = None
-                    if isinstance(institute, dict):
-                        _institute = list(institute.keys())[0]
-                        label = institute[_institute]["label"]
-                        institute = _institute
-
-                    if institute not in labels:
-                        labels[institute] = label
-
-                    if institute not in institutes_in_list:
-                        institutes_in_list.append(institute)
-
-                    numbers.append(institutes_in_list.index(institute) + 1)
-
-                    end = r",\, " if j < (len(institutes) - 1) else ""
-                    text += f"{numbers[-1]}{end}"
-
-                text += r"}$"
-
-                if i < (len(self.all_authors) - 1):
-                    text += ", "
-
-            if (i + 1) % line_breaks == 0:
-                text += r"\newauthor\,\!"
-
-            if i < (len(self.all_authors) - 1):
-                text += "\n"
-
-        text += "\n"
-
-        # then print the institutes
-        text += r"\\" + "\n"
-
-        for i, institute in enumerate(institutes_in_list):
-            escaped_institute = tex_escape(institute)
-            label = labels[institute]
-            text += f" $^{{{i + 1}}}$ {escaped_institute} "
-
-            if institute == institutes_in_list[-1]:
-                text += "\n"
-            else:
-                text += r"\\" + "\n"
-
-        text += r"}" + "\n"
-
-        if show:
-            print(text)
-
-        if save_to_file is not None:
-            with open(save_to_file, "w") as f:
-                print(text, file=f)
-
-        if preview:
-            preview_MNRAS(text)
-
-        # if copy_to_clipboard:
-        #     pyperclip.copy(text)
-
-        return text
+        return hash_names
