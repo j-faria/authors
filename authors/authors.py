@@ -1,5 +1,3 @@
-"""Authors of your next scientific article"""
-
 from collections import Counter
 import os
 from typing import List, Literal, Tuple, Union
