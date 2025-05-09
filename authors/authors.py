@@ -14,7 +14,73 @@ from .utils import (
     humanize_yaml,
     closest_author,
 )
-from .latex_pdf_utils import preview_AandA, preview_MNRAS
+
+
+def _duplicates(lst):
+    if len(lst) != len(set(lst)):
+        return True, set([x for x in lst if lst.count(x) > 1])
+    return False, None
+
+
+class Names:
+    def __init__(self, names: List[str], nicknames: List[str] = [],
+                 warnings: bool = False):
+        """ Holds a list of names and implements the `in` operator 
+        
+        Args:
+            names (List[str]):
+                List of names
+            nicknames (List[str], optional):
+                List of nicknames.
+            warnings (bool, optional):
+                Whether to print warnings for duplicate names.
+        """
+        self.names = [name.casefold() for name in names]  # case-insensitive names
+        self.names_norm = [strip_accents(name) for name in self.names]
+        self.nicknames = nicknames
+        self._warnings = warnings
+        if warnings and (dup := _duplicates(names))[0]:
+            print(f"WARNING: duplicate names\n{dup[1]}")
+        if warnings and (dup := _duplicates(self.last_names))[0]:
+            print(f"WARNING: duplicate last names\n{dup[1]}")
+
+    @property
+    def last_names(self):
+        return [name_to_last(name) for name in self.names]
+
+    @property
+    def last_names_norm(self):
+        return [name_to_last(strip_accents(name)) for name in self.names]
+
+    @property
+    def first_last_names(self):
+        return [name_to_first_last(strip_accents(name)) for name in self.names]
+
+    def __len__(self):
+        return len(self.names)
+
+    def __contains__(self, name: str):
+        name = name.casefold()
+        if name in self.names or name in self.last_names:
+            return True
+        if name in self.nicknames:
+            return True
+        if (strip_accents(name) in self.names_norm or strip_accents(name) in self.last_names_norm):
+            return True
+        if name_to_last(name) in self.last_names:
+            i = self.last_names.index(name_to_last(name))
+            if name_to_initials_last(name) == name_to_initials_last(self.names[i]):
+                return True
+        if name_to_last(strip_accents(name)) in self.last_names_norm:
+            i = self.last_names_norm.index(name_to_last(strip_accents(name)))
+            if name_to_initials(name) == name_to_initials(self.names[i]):
+                return True
+        if name_to_first_last(name) in self.first_last_names:
+            return True
+        if name_to_first_last(strip_accents(name)) in self.first_last_names:
+            return True
+
+        return False
 
 
 def get_all_known_authors(return_filename=False) -> Union[dict, Tuple[dict, str]]:
