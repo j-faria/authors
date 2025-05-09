@@ -528,9 +528,17 @@ class Authors(AandA, MNRAS):
         if load_from == "all":
             load_from = "\n".join([n for n in get_all_known_authors().keys()])
 
-        here = os.path.dirname(os.path.abspath(__file__))
-        all_known_authors_file = os.path.join(here, "data", "all_known_authors.yml")
-        self.all_known_authors = load(open(all_known_authors_file, encoding="utf-8"))
+        self.all_known_authors = get_all_known_authors()
+
+        self.all_known_nicknames = list(
+            set([v.get("nickname", "") for v in self.all_known_authors.values()])
+        )
+
+        self.names = Names(
+            self.all_known_authors.keys(),
+            nicknames=self.all_known_nicknames,
+            warnings=False,
+        )
 
         if os.path.exists(load_from):
             A = list(map(str.strip, open(load_from, encoding="utf-8").readlines()))
@@ -543,6 +551,9 @@ class Authors(AandA, MNRAS):
         self.first_author = self.all_authors[0]
         self.known = self._get_known_authors()
 
+        if warn_unknown and not all(self.known):
+            print("WARNING: some authors are unknown:", ", ".join(self.unknown_authors))
+
     def __repr__(self):
         return f"Authors({len(self.all_authors)} authors, {sum(self.known)} known)"
 
@@ -551,27 +562,26 @@ class Authors(AandA, MNRAS):
         return [a for a, known in zip(self.all_authors, self.known) if not known]
 
     def _get_known_authors(self) -> List:
-        known_last_names, known_last_names_norm = [], []
-        known_nicknames = []
-        for a in self.all_known_authors.keys():
-            known_last_names.append(name_to_last(a).casefold())
-            known_last_names_norm.append(strip_accents(name_to_last(a).casefold()))
-            known_nicknames.append(self.all_known_authors[a].get("nickname", ""))
-
-        known = []
-        for last_name in self.last_names:
-            if last_name.casefold() in known_last_names:
-                known.append(True)
-            elif tex_deescape(last_name).casefold() in known_last_names:
-                known.append(True)
-            elif last_name.casefold() in known_last_names_norm:
-                known.append(True)
-            elif last_name.casefold() in known_nicknames:
-                known.append(True)
-            else:
-                print(f"!! unknown author: {last_name}")
-                known.append(False)
+        known = [author in self.names for author in self.all_authors]
         return known
+
+        # known = []
+        # for last_name in self.last_names:
+        #     if last_name.casefold() in known_last_names:
+        #         known.append(True)
+        #     elif tex_deescape(last_name).casefold() in known_last_names:
+        #         known.append(True)
+        #     elif last_name.casefold() in known_last_names_norm:
+        #         known.append(True)
+        #     elif last_name.casefold() in known_nicknames:
+        #         known.append(True)
+        #     elif any(match := [last_name in known_last_name for known_last_name in known_last_names_norm]):
+        #         if sum(match) > 1:
+        #             raise ValueError(f"multiple matches for {last_name}")
+        #         known.append(True)
+        #     else:
+        #         known.append(False)
+        # return known
 
     def _get_author_list(
         self, alphabetical=False, alphabetical_after=1, alphabetical_groups=None
