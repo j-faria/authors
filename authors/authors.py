@@ -15,6 +15,9 @@ from .utils import (
     closest_author,
 )
 
+from .journals.AandA import AandA
+from .journals.MNRAS import MNRAS
+
 
 def _duplicates(lst):
     if len(lst) != len(set(lst)):
@@ -498,7 +501,7 @@ def _health_check(check_affiliations: bool = True):
                     pass
 
 
-class Authors:
+class Authors(AandA, MNRAS):
     """Hold information about the authors of a paper"""
 
     def __init__(self, load_from: str, warn_unknown: bool = True) -> None:
@@ -509,10 +512,12 @@ class Authors:
                 string with the author names or the name of a file containing
                 the list of authors.
             warn_unknown (bool):
-                Whether to warn about unknown authors
+                Whether to emit warninings for unknown authors
+
         Examples:
-            Authors('First Name\nSecond Name')
-            Authors('author_list.txt')
+            >>> Authors('First Name\nSecond Name')
+            >>> Authors('author_list.txt')
+
         """
         if not isinstance(load_from, str):
             raise TypeError("`load_from` must be a string")
