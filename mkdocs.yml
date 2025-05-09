@@ -43,6 +43,3 @@ extra_css:
   - stylesheets/mkdocstrings.css
 
 copyright: The author of this package is João Faria
-
-watch:
-  - C:\Users\joaof\Work\authors
