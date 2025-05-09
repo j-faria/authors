@@ -210,6 +210,14 @@ def name_to_initials(name):
     return inititals
 
 
+def name_to_first_last(name):
+    if ' ' not in name:
+        return name
+    name = ' '.join(name.split())
+    parts = name.split(' ')
+    return parts[0], parts[-1]
+
+
 def strip_accents(s):
     return ''.join(c for c in unicodedata.normalize('NFD', s) 
                    if unicodedata.category(c) != 'Mn')
