@@ -30,10 +30,10 @@ def lev_dist(a: str, b: str) -> float:
     Calculates the Levenshtein distance between two input strings `a` and `b`
 
     Args:
-        a, b (str) : The two strings to be compared
+        a,b (str) : The two strings to be compared
 
     Returns:
-        The distance between string `a` and `b`.
+        The Levenshtein distance between string `a` and `b`.
 
     Examples:
         >>> lev_dist('stamp', 'stomp')
