@@ -14,7 +14,7 @@ repository](https://github.com/j-faria/authors/issues){:target="_blank"}. You ca
 issue](https://github.com/j-faria/authors/issues/new/choose){:target="_blank"} and choose from the
 available templates:
 
-![alt text](image.png)
+![alt text](assets/images/new_issue.png)
 
 ### Using the package
 
