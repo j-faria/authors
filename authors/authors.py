@@ -104,14 +104,34 @@ def get_all_known_authors(return_filename=False) -> Union[dict, Tuple[dict, str]
         return load(open(file, encoding="utf-8"))
 
 
-def write_all_known_authors(data: dict):
+def write_all_known_authors(data: dict, confirm: bool = True):
     """Write all the known authors to the yaml file
 
     Args:
         data (dict):
             Dictionary with information about the known authors
+        confirm (bool):
+            Whether to ask for confirmation before overwriting the YAML file
+
+    Raises:
+        ValueError:
+            If `data` is empty
+    
+    !!! Warning
+        This function overwrites the local YAML file that contains the author
+        database. Use with caution!
     """
+    if len(data) == 0:
+        raise ValueError("data is empty")
+
     _, filename = get_all_known_authors(return_filename=True)
+
+    if confirm:
+        print(f"Overwrite {filename}? [y/N]", end=" ")
+        if input().lower() != "y":
+            print("Not overwriting")
+            return
+
     with open(filename, "w", encoding="utf-8") as stream:
         dump(data, stream, allow_unicode=True, width=500, line_break=True)
     humanize_yaml(filename)
