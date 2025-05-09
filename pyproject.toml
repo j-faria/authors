@@ -23,10 +23,10 @@ dependencies = [
 ]
 
 [project.scripts]
-update-author-name = "authors.cli:cli_update_author_name"
-update-author-email = "authors.cli:cli_update_author_email"
-update-author-orcid = "authors.cli:cli_update_author_orcid"
-delete-author = "authors.cli:cli_delete_author"
+authors-update-author-name = "authors.cli:cli_update_author_name"
+authors-update-author-email = "authors.cli:cli_update_author_email"
+authors-update-author-orcid = "authors.cli:cli_update_author_orcid"
+authors-delete-author = "authors.cli:cli_delete_author"
 authors = "authors.cli:cli_authors"
 
 
@@ -37,5 +37,4 @@ Repository = "https://github.com/j-faria/authors"
 packages = ['authors']
 
 [tool.setuptools_scm]
-# can be empty if no extra settings are needed, presence enables setuptools-scm
 local_scheme = "no-local-version"
