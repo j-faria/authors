@@ -1,15 +1,15 @@
 from collections import Counter
 import os
 from typing import List, Literal, Tuple, Union
-# import pyperclip
 from yaml import safe_load as load, safe_dump as dump
+# import pyperclip
 
 from .utils import (
     name_to_initials,
     name_to_initials_last,
     name_to_last,
+    name_to_first_last,
     strip_accents,
-    tex_escape,
     tex_deescape,
     humanize_yaml,
     closest_author,
