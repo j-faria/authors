@@ -1,0 +1,48 @@
+site_name: authors
+
+repo_name: j-faria/authors
+repo_url: https://github.com/j-faria/authors
+
+theme: 
+  name: material
+  favicon: assets/images/people-group.svg
+  icon:
+    logo: fontawesome/solid/people-group
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - navigation.top
+
+nav:
+  - Welcome: index.md
+  - Documentation: documentation.md
+  - Contributing: contributing.md
+  - API Reference: api.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+
+markdown_extensions:
+  - footnotes
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_css:
+  - stylesheets/mkdocstrings.css
+
+copyright: The author of this package is João Faria
+
+watch:
+  - C:\Users\joaof\Work\authors
