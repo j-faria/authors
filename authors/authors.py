@@ -90,6 +90,7 @@ def get_all_known_authors(return_filename=False) -> Union[dict, Tuple[dict, str]
     Args:
         return_filename (bool):
             Whether to return the path to the yaml file
+
     Returns:
         known_authors (dict):
             Dictionary with information about the known authors
@@ -170,6 +171,7 @@ def register_author(
     orcid: str = None,
     acknowledgements: str = None,
     nickname: str = None,
+    spelling: str = None,
 ):
     """Register a new author
 
@@ -179,16 +181,17 @@ def register_author(
         affiliations (List[str]):
             List of affiliations
         labels (List[str], optional):
-            Labels to use for each affiliation. Should have the same length as
-            `affiliations`. Defaults to None.
+            Labels to use for each affiliation. Should have the same length as `affiliations`.
         email (str, optional):
-            Email address. Defaults to None.
+            Email address.
         orcid (str, optional):
-            ORCID id. Defaults to None.
+            ORCID id.
         acknowledgements (str, optional):
-            Author's acknowledgements. Defaults to None.
+            Author's acknowledgements.
         nickname (str, optional):
-            Nickname of the author. Defaults to None.
+            Nickname of the author.
+        spelling (str, optional):
+            Exact spelling of the author's name.
     """
     full_name = tex_deescape(str(full_name))
     all_known_authors = get_all_known_authors()
@@ -226,7 +229,10 @@ def register_author(
     if nickname is not None:
         all_known_authors[full_name]["nickname"] = nickname
 
-    write_all_known_authors(all_known_authors)
+    if spelling is not None:
+        all_known_authors[full_name]["spelling"] = spelling
+
+    write_all_known_authors(all_known_authors, confirm=False)
 
 
 def update_author_name(old_name: str, new_name: str, allow_closest: bool = False):
@@ -249,7 +255,8 @@ def update_author_name(old_name: str, new_name: str, allow_closest: bool = False
     if old_name in all_known_authors:
         new_name = tex_deescape(str(new_name))
         all_known_authors[new_name] = all_known_authors.pop(old_name)
-        write_all_known_authors(all_known_authors)
+        write_all_known_authors(all_known_authors, confirm=False)
+        print("updated name for", old_name)
     else:
         print(f'author "{old_name}" not found')
 
@@ -273,7 +280,10 @@ def update_author_email(name: str, email: str, allow_closest: bool = False):
         name = closest
     if name in all_known_authors:
         all_known_authors[name]["email"] = str(email)
-    write_all_known_authors(all_known_authors)
+        write_all_known_authors(all_known_authors, confirm=False)
+        print("updated email for", name)
+    else:
+        print(f'author "{name}" not found')
 
 
 def update_author_orcid(name: str, orcid: str, allow_closest: bool = False):
@@ -295,10 +305,9 @@ def update_author_orcid(name: str, orcid: str, allow_closest: bool = False):
         name = closest
     if name in all_known_authors:
         all_known_authors[name]["orcid"] = str(orcid)
-        write_all_known_authors(all_known_authors)
+        write_all_known_authors(all_known_authors, confirm=False)
         print("updated ORCID for", name)
     else:
-        # closest = closest_author(name, list(all_known_authors.keys()))[0]
         print(f'author "{name}" not found')
 
 
@@ -327,7 +336,10 @@ def update_author_affiliations(
         elif strategy == "replace":
             all_known_authors[name]["affiliations"] = affiliations
 
-    write_all_known_authors(all_known_authors)
+        write_all_known_authors(all_known_authors, confirm=False)
+        print("updated affiliations for", name)
+    else:
+        print(f'author "{name}" not found')
 
 
 def update_author_acknowledgements(name: str, acknowledgements: str):
@@ -340,7 +352,10 @@ def update_author_acknowledgements(name: str, acknowledgements: str):
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
         all_known_authors[name]["acknowledgements"] = str(acknowledgements)
-    write_all_known_authors(all_known_authors)
+        write_all_known_authors(all_known_authors, confirm=False)
+        print("updated acknowledgements for", name)
+    else:
+        print(f'author "{name}" not found')
 
 
 def update_author_nickname(name: str, nickname: str):
@@ -353,7 +368,26 @@ def update_author_nickname(name: str, nickname: str):
     all_known_authors = get_all_known_authors()
     if name in all_known_authors:
         all_known_authors[name]["nickname"] = str(nickname)
-    write_all_known_authors(all_known_authors)
+        write_all_known_authors(all_known_authors, confirm=False)
+        print("updated nickname for", name)
+    else:
+        print(f'author "{name}" not found')
+
+
+def update_author_spelling(name: str, spelling: str):
+    """Update the spelling of an author's name
+
+    Args:
+        name (str): The name of the author
+        spelling (str): The new spelling
+    """
+    all_known_authors = get_all_known_authors()
+    if name in all_known_authors:
+        all_known_authors[name]["spelling"] = str(spelling)
+        write_all_known_authors(all_known_authors, confirm=False)
+        print("updated spelling for", name)
+    else:
+        print(f'author "{name}" not found')
 
 
 def delete_author(name: str):
@@ -375,8 +409,8 @@ def change_affiliation(old: str, new: str):
     """Change an affiliation
 
     Args:
-        old (str): old name of the affiliation, which will be replaced
-        new (str): new name of the affiliation
+        old (str): old affiliation, which will be replaced
+        new (str): new affiliation
     """
     all_known_authors = get_all_known_authors()
     for k, v in all_known_authors.items():
@@ -430,7 +464,6 @@ def _health_check(check_affiliations: bool = True):
         for name, counts in c.items():
             if counts > 1:
                 print("  ", name, "occurs", counts, "times")
-
 
     affiliations = list(set(get_all_affiliations()))
     affiliation_label = get_all_affiliations_with_label()
